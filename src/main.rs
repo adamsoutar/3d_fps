@@ -3,6 +3,7 @@ use sfml::window::*;
 use sfml::system::*;
 use std::f32::consts::PI;
 
+// Clonable for transformed map
 #[derive(Clone)]
 struct Wall {
     pub colour: Color,
@@ -21,7 +22,7 @@ const PLAYER_ROT_SPEED: f32 = PI;
 fn main() {
     let mut window = RenderWindow::new(
     (800, 600),
-    "shooter",
+    "3d-fps",
     Style::CLOSE,
     &Default::default(),
     );

@@ -1,5 +1,5 @@
 [package]
-name = "shooter"
+name = "3d-fps"
 version = "0.1.0"
 authors = ["Adam <adam@overflo.me>"]
 edition = "2018"
