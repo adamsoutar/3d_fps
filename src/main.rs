@@ -13,6 +13,9 @@ struct Thing {
     pub rot: f32       // Rotation
 }
 
+const PLAYER_SPEED: f32 = 200.;
+const PLAYER_ROT_SPEED: f32 = PI * 2.;
+
 fn main() {
     let mut window = RenderWindow::new(
     (800, 600),
@@ -49,8 +52,6 @@ fn main() {
         pos: Vector2f::new(0.0, 0.0),
         rot: 0.0
     };
-    let player_speed: f32 = 500.;
-    let player_rot_speed: f32 = PI;
 
     let mut clock = Clock::start();
 
@@ -61,27 +62,11 @@ fn main() {
         while let Some(event) = window.poll_event() {
             match event {
                 Event::Closed => return,
-                Event::KeyPressed { code, ctrl: _, alt: _, shift: _, system: _ } => {
-                    let mv = player_speed * delta_time;
-                    let mv_vec= match code {
-                        Key::W => Vector2f::new(0., mv),
-                        Key::A => Vector2f::new(-mv, 0.),
-                        Key::S => Vector2f::new(0., -mv),
-                        Key::D => Vector2f::new(mv, 0.),
-                        _ => Vector2f::new(0., 0.)
-                    };
-                    player.pos += rotate_vec(mv_vec, player.rot);
-
-                    let rot = player_rot_speed * delta_time;
-                    player.rot += match code {
-                        Key::Left => -rot,
-                        Key::Right => rot,
-                        _ => 0.
-                    }
-                },
                 _ => {}
             }
         }
+
+        process_movement(delta_time, &mut player);
 
         window.clear(&Color::BLACK);
         draw_map(&mut window, &map, &player);
@@ -89,6 +74,40 @@ fn main() {
     }
 }
 
+/* -= CONTROLS STUFF =- */
+fn process_movement (delta_time: f32, player: &mut Thing) {
+    // Forward, Backward, Strafe
+    let mut movement = Vector2f::new(0., 0.);
+    let mv = PLAYER_SPEED * delta_time;
+
+    if Key::is_pressed(Key::W) {
+        movement += Vector2f::new(0., mv);
+    }
+    if Key::is_pressed(Key::A) {
+        movement += Vector2f::new(-mv, 0.);
+    }
+    if Key::is_pressed(Key::S) {
+        movement += Vector2f::new(0., -mv);
+    }
+    if Key::is_pressed(Key::D) {
+        movement += Vector2f::new(mv, 0.);
+    }
+
+    player.pos += rotate_vec(movement, player.rot);
+
+    // Rotation
+    let rot = PLAYER_ROT_SPEED * delta_time;
+    let mut rt = 0.;
+    if Key::is_pressed(Key::Left) {
+        rt += -rot;
+    }
+    if Key::is_pressed(Key::Right) {
+        rt += rot;
+    }
+    player.rot += rt;
+}
+
+/* -= VECTOR AND RENDER STUFF =- */
 fn sfml_vec (v: Vector2f) -> Vector2f {
     Vector2f::new(v.x, -v.y)
 }
