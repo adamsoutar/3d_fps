@@ -50,6 +50,7 @@ fn main() {
         rot: 0.0
     };
     let player_speed: f32 = 500.;
+    let player_rot_speed: f32 = PI;
 
     let mut clock = Clock::start();
 
@@ -62,13 +63,21 @@ fn main() {
                 Event::Closed => return,
                 Event::KeyPressed { code, ctrl: _, alt: _, shift: _, system: _ } => {
                     let mv = player_speed * delta_time;
-                    player.pos += match code {
+                    let mv_vec= match code {
                         Key::W => Vector2f::new(0., mv),
                         Key::A => Vector2f::new(-mv, 0.),
                         Key::S => Vector2f::new(0., -mv),
                         Key::D => Vector2f::new(mv, 0.),
                         _ => Vector2f::new(0., 0.)
                     };
+                    player.pos += rotate_vec(mv_vec, player.rot);
+
+                    let rot = player_rot_speed * delta_time;
+                    player.rot += match code {
+                        Key::Left => -rot,
+                        Key::Right => rot,
+                        _ => 0.
+                    }
                 },
                 _ => {}
             }
@@ -82,6 +91,17 @@ fn main() {
 
 fn sfml_vec (v: Vector2f) -> Vector2f {
     Vector2f::new(v.x, -v.y)
+}
+
+fn rotate_vec (v: Vector2f, theta: f32) -> Vector2f {
+    let t = -theta;
+    let st = t.sin();
+    let ct = t.cos();
+
+    Vector2::new(
+        v.x * ct - v.y * st,
+        v.x * st + v.y * ct
+    )
 }
 
 // Angle in radians
@@ -101,7 +121,7 @@ fn draw_wall (wall: &Wall, window: &mut RenderWindow) {
     let xdiff = wall.p2.x - wall.p1.x;
     let ydiff = wall.p2.y - wall.p1.y;
     let angle = -ydiff.atan2(xdiff) + PI / 2.;
-    
+
     let yda = ydiff.abs();
     let xda = xdiff.abs();
 
