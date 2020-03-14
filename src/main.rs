@@ -7,7 +7,8 @@ use std::f32::consts::PI;
 struct Wall {
     pub colour: Color,
     pub p1: Vector2f,
-    pub p2: Vector2f
+    pub p2: Vector2f,
+    pub height: f32
 }
 struct Thing {
     pub pos: Vector2f, // Position
@@ -15,7 +16,7 @@ struct Thing {
 }
 
 const PLAYER_SPEED: f32 = 200.;
-const PLAYER_ROT_SPEED: f32 = PI * 2.;
+const PLAYER_ROT_SPEED: f32 = PI;
 
 fn main() {
     let mut window = RenderWindow::new(
@@ -26,7 +27,7 @@ fn main() {
     );
     window.set_vertical_sync_enabled(true);
 
-    let map: Vec<Wall> = vec![
+    /*let map: Vec<Wall> = vec![
         Wall {
             colour: Color::RED,
             p1: Vector2f::new(-100., 100.),
@@ -46,6 +47,14 @@ fn main() {
             colour: Color::CYAN,
             p1: Vector2f::new(-100., -100.),
             p2: Vector2f::new(-100., 100.)
+        }
+    ];*/
+    let map= vec![
+        Wall {
+            colour: Color::YELLOW,
+            p1: Vector2f::new(-100., 200.),
+            p2: Vector2f::new(100., 200.),
+            height: 100.
         }
     ];
 
