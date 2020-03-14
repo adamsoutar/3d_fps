@@ -3,6 +3,7 @@ use sfml::window::*;
 use sfml::system::*;
 use std::f32::consts::PI;
 
+#[derive(Clone)]
 struct Wall {
     pub colour: Color,
     pub p1: Vector2f,
@@ -67,9 +68,10 @@ fn main() {
         }
 
         process_movement(delta_time, &mut player);
+        let t_map = get_transformed_map(&map, &player);
 
         window.clear(&Color::BLACK);
-        draw_map(&mut window, &map, &player);
+        draw_map(&mut window, &t_map, &player);
         window.display();
     }
 }
@@ -108,6 +110,19 @@ fn process_movement (delta_time: f32, player: &mut Thing) {
 }
 
 /* -= VECTOR AND RENDER STUFF =- */
+fn get_transformed_map (map: &Vec<Wall>, player: &Thing) -> Vec<Wall> {
+    let mut t_map = vec![];
+
+    for w in map {
+        let mut wall = w.clone();
+        wall.p1 = rotate_vec(wall.p1 - player.pos, -player.rot);
+        wall.p2 = rotate_vec(wall.p2 - player.pos, -player.rot);
+        t_map.push(wall);
+    }
+
+    t_map
+}
+
 fn sfml_vec (v: Vector2f) -> Vector2f {
     Vector2f::new(v.x, -v.y)
 }
@@ -150,22 +165,25 @@ fn draw_wall (wall: &Wall, window: &mut RenderWindow) {
     draw_line_at_rotation(window, wall.p1, dist, angle, wall.colour);
 }
 
-fn draw_thing (window: &mut RenderWindow, thing: &Thing) {
+fn draw_thing (window: &mut RenderWindow, thing: &Thing, player: &Thing) {
     let center = Vector2f::new(400., 300.);
 
     let mut rct = RectangleShape::new();
     rct.set_size(Vector2f::new(10., 10.));
     rct.set_fill_color(&Color::GREEN);
-    rct.set_position(center + sfml_vec(thing.pos) - Vector2f::new(5., 5.));
+    rct.set_position(center + sfml_vec(thing.pos - player.pos) - Vector2f::new(5., 5.));
 
     window.draw(&rct);
 
-    draw_line_at_rotation(window, thing.pos, 30., thing.rot, Color::WHITE);
+    draw_line_at_rotation(window, thing.pos - player.pos, 30., thing.rot - player.rot, Color::WHITE);
 }
 
 fn draw_map (window: &mut RenderWindow, map: &Vec<Wall>, player: &Thing) {
     for wall in map {
         draw_wall(&wall, window);
     }
-    draw_thing(window, player);
+    // As a result of player being the thing and the anchor
+    // he's always drawn facing straight up and centered.
+    // That's fine because the world rotates around him.
+    draw_thing(window, player, player);
 }
