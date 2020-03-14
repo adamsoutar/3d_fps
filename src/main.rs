@@ -44,15 +44,32 @@ fn main() {
             p2: Vector2f::new(-100., 100.)
         }
     ];
-    let player = Thing {
+
+    let mut player = Thing {
         pos: Vector2f::new(0.0, 0.0),
         rot: 0.0
     };
+    let player_speed: f32 = 500.;
+
+    let mut clock = Clock::start();
 
     loop {
+        let delta_time = clock.restart().as_seconds();
+        //println!("{} FPS", 1. / delta_time);
+
         while let Some(event) = window.poll_event() {
             match event {
                 Event::Closed => return,
+                Event::KeyPressed { code, ctrl: _, alt: _, shift: _, system: _ } => {
+                    let mv = player_speed * delta_time;
+                    player.pos += match code {
+                        Key::W => Vector2f::new(0., mv),
+                        Key::A => Vector2f::new(-mv, 0.),
+                        Key::S => Vector2f::new(0., -mv),
+                        Key::D => Vector2f::new(mv, 0.),
+                        _ => Vector2f::new(0., 0.)
+                    };
+                },
                 _ => {}
             }
         }
@@ -63,6 +80,10 @@ fn main() {
     }
 }
 
+fn sfml_vec (v: Vector2f) -> Vector2f {
+    Vector2f::new(v.x, -v.y)
+}
+
 // Angle in radians
 fn draw_line_at_rotation (window: &mut RenderWindow, pos: Vector2f, length: f32, angle: f32, colour: Color) {
     let center = Vector2f::new(400., 300.);
@@ -71,15 +92,16 @@ fn draw_line_at_rotation (window: &mut RenderWindow, pos: Vector2f, length: f32,
     rct.set_size(Vector2f::new(length, 3.));
     rct.set_rotation(angle * 180. / PI - 90.);
     rct.set_fill_color(&colour);
-    rct.set_position(center + pos);
+    rct.set_position(center + sfml_vec(pos));
 
     window.draw(&rct);
 }
 
 fn draw_wall (wall: &Wall, window: &mut RenderWindow) {
-    let xdiff = wall.p1.x - wall.p2.x;
-    let ydiff = wall.p1.y - wall.p2.y;
-    let angle = ydiff.atan2(xdiff) + PI;
+    let xdiff = wall.p2.x - wall.p1.x;
+    let ydiff = wall.p2.y - wall.p1.y;
+    let angle = -ydiff.atan2(xdiff) + PI / 2.;
+    
     let yda = ydiff.abs();
     let xda = xdiff.abs();
 
@@ -95,7 +117,7 @@ fn draw_thing (window: &mut RenderWindow, thing: &Thing) {
     let mut rct = RectangleShape::new();
     rct.set_size(Vector2f::new(10., 10.));
     rct.set_fill_color(&Color::GREEN);
-    rct.set_position(center + thing.pos - Vector2f::new(5., 5.));
+    rct.set_position(center + sfml_vec(thing.pos) - Vector2f::new(5., 5.));
 
     window.draw(&rct);
 
