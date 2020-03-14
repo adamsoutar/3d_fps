@@ -155,6 +155,19 @@ fn draw_3d_map (window: &mut RenderWindow, map: &Vec<Wall>, player: &Thing) {
     }
 }
 
+fn line_intersect (v1: Vector2f, v2: Vector2f, v3: Vector2f, v4: Vector2f) -> Vector2f {
+    // From https://youtu.be/HQYsFshbkYw?t=188
+    let mut v = Vector2f::new(cross_product(v1, v2), cross_product(v3, v4));
+    let mut det = cross_product(v1 - v2, v3 - v4);
+    v.x = cross_product(Vector2f::new(v.x, v1.x - v2.x), Vector2f::new(v.y, v3.x - v4.x)) / det;
+    v.y = cross_product(Vector2f::new(v.x, v1.y - v2.y), Vector2::new(v.y, v3.y - v4.y)) / det;
+    v
+}
+
+fn cross_product (v1: Vector2f, v2: Vector2f) -> f32 {
+    v1.x * v2.y - v1.y * v2.x
+}
+
 fn get_transformed_map (map: &Vec<Wall>, player: &Thing) -> Vec<Wall> {
     let mut t_map = vec![];
 
