@@ -52,9 +52,9 @@ fn main() {
     let map= vec![
         Wall {
             colour: Color::YELLOW,
-            p1: Vector2f::new(-100., 200.),
-            p2: Vector2f::new(100., 200.),
-            height: 100.
+            p1: Vector2f::new(-100., 100.),
+            p2: Vector2f::new(100., 100.),
+            height: 1000.
         }
     ];
 
@@ -80,7 +80,8 @@ fn main() {
         let t_map = get_transformed_map(&map, &player);
 
         window.clear(&Color::BLACK);
-        draw_map(&mut window, &t_map, &player);
+        //draw_map(&mut window, &t_map, &player);
+        draw_3d_map(&mut window, &t_map, &player);
         window.display();
     }
 }
@@ -119,6 +120,41 @@ fn process_movement (delta_time: f32, player: &mut Thing) {
 }
 
 /* -= VECTOR AND RENDER STUFF =- */
+fn draw_3d_map (window: &mut RenderWindow, map: &Vec<Wall>, player: &Thing) {
+    println!("({}, {})", player.pos.x, player.pos.y);
+
+    // "To perspective project a co-ordinate, you simply take its x and y
+    //  co-ordinate and divide them by the z co-ordinate"
+    for wall in map {
+        let wz1 = wall.height / 2.;
+        let wz2 = -wz1;
+        let wx1 = -wall.p1.x * 16. / wall.p1.y;
+        let wx2 = -wall.p2.x * 16. / wall.p2.y;
+        let wy1a = wz2 / wall.p1.y;
+        let wy1b = wz1 / wall.p1.y;
+        let wy2a = wz2 / wall.p2.y;
+        let wy2b = wz1 / wall.p2.y;
+
+        let top_left = Vector2f::new(wx1, wy1a);
+        //println!("Top left: ({}, {})", top_left.x, top_left.y);
+        let top_right = Vector2f::new(wx2, wy2a);
+        //println!("Top right: ({}, {})", top_right.x, top_right.y);
+        let bottom_right = Vector2f::new(wx2, wy2b);
+        //println!("Bottom right: ({}, {})", bottom_right.x, bottom_right.y);
+        let bottom_left = Vector2f::new(wx1, wy1b);
+        //println!("Bottom left: ({}, {})", bottom_left.x, bottom_left.y);
+
+        // Top
+        draw_line(window, top_left, top_right, wall.colour);
+        // Right
+        draw_line(window, top_right, bottom_right, wall.colour);
+        // Bottom
+        draw_line(window, bottom_right, bottom_left, wall.colour);
+        // Left
+        draw_line(window, bottom_left, top_left, wall.colour);
+    }
+}
+
 fn get_transformed_map (map: &Vec<Wall>, player: &Thing) -> Vec<Wall> {
     let mut t_map = vec![];
 
@@ -160,9 +196,9 @@ fn draw_line_at_rotation (window: &mut RenderWindow, pos: Vector2f, length: f32,
     window.draw(&rct);
 }
 
-fn draw_wall (wall: &Wall, window: &mut RenderWindow) {
-    let xdiff = wall.p2.x - wall.p1.x;
-    let ydiff = wall.p2.y - wall.p1.y;
+fn draw_line (window: &mut RenderWindow, p1: Vector2f, p2: Vector2f, colour: Color) {
+    let xdiff = p2.x - p1.x;
+    let ydiff = p2.y - p1.y;
     let angle = -ydiff.atan2(xdiff) + PI / 2.;
 
     let yda = ydiff.abs();
@@ -171,7 +207,11 @@ fn draw_wall (wall: &Wall, window: &mut RenderWindow) {
     let py = xda * xda + yda * yda;
     let dist = py.sqrt();
 
-    draw_line_at_rotation(window, wall.p1, dist, angle, wall.colour);
+    draw_line_at_rotation(window, p1, dist, angle, colour);
+}
+
+fn draw_wall (wall: &Wall, window: &mut RenderWindow) {
+    draw_line(window, wall.p1, wall.p2, wall.colour);
 }
 
 fn draw_thing (window: &mut RenderWindow, thing: &Thing, player: &Thing) {
