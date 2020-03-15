@@ -16,7 +16,7 @@ struct Thing {
     pub rot: f32       // Rotation
 }
 
-const PLAYER_SPEED: f32 = 200.;
+const PLAYER_SPEED: f32 = 1.;
 const PLAYER_ROT_SPEED: f32 = PI;
 const WIDTH: u32 = 1920;
 const HEIGHT: u32 = 1080;
@@ -33,27 +33,27 @@ fn main() {
     let map: Vec<Wall> = vec![
         Wall {
             colour: Color::RED,
-            p1: Vector2f::new(-100., 100.),
-            p2: Vector2f::new(100., 100.),
-            height: 10000.
+            p1: Vector2f::new(-1., 1.),
+            p2: Vector2f::new(1., 1.),
+            height: 128.
         },
         Wall {
             colour: Color::GREEN,
-            p1: Vector2f::new(100., 100.),
-            p2: Vector2f::new(100., -100.),
-            height: 10000.
+            p1: Vector2f::new(1., 1.),
+            p2: Vector2f::new(1., -1.),
+            height: 128.
         },
         Wall {
             colour: Color::YELLOW,
-            p1: Vector2f::new(100., -100.),
-            p2: Vector2f::new(-100., -100.),
-            height: 10000.
+            p1: Vector2f::new(1., -1.),
+            p2: Vector2f::new(-1., -1.),
+            height: 128.
         },
         Wall {
             colour: Color::CYAN,
-            p1: Vector2f::new(-100., -100.),
-            p2: Vector2f::new(-100., 100.),
-            height: 10000.
+            p1: Vector2f::new(-1., -1.),
+            p2: Vector2f::new(-1., 1.),
+            height: 128.
         }
     ];
     // let map= vec![
@@ -88,7 +88,7 @@ fn main() {
 
         window.clear(&Color::BLACK);
         draw_3d_map(&mut window, &mut t_map, &player);
-        draw_map(&mut window, &t_map, &player);
+        // draw_map(&mut window, &t_map, &player);
         window.display();
     }
 }
@@ -160,13 +160,13 @@ fn draw_3d_map (window: &mut RenderWindow, map: &mut Vec<Wall>, player: &Thing) 
             let i1 = line_intersect(
                 wall.p1,
                 wall.p2,
-                Vector2f::new(-0.0001, 0.0001),
-                Vector2f::new(-20., 5.));
+                Vector2f::new(0., 0.),
+                Vector2f::new(-1., 0.001));
             let i2 = line_intersect(
                 wall.p1,
                 wall.p2,
-                Vector2f::new(0.0001, 0.0001),
-                Vector2f::new(20., 5.));
+                Vector2f::new(0., 0.),
+                Vector2f::new(1., 0.001));
             if wall.p1.y <= 0. {
                 if i1.y > 0. {
                     wall.p1 = i1
@@ -216,7 +216,7 @@ fn draw_3d_map (window: &mut RenderWindow, map: &mut Vec<Wall>, player: &Thing) 
 fn line_intersect (v1: Vector2f, v2: Vector2f, v3: Vector2f, v4: Vector2f) -> Vector2f {
     // From https://youtu.be/HQYsFshbkYw?t=188
     let mut v = Vector2f::new(cross_product(v1, v2), cross_product(v3, v4));
-    let mut det = cross_product(v1 - v2, v3 - v4);
+    let det = cross_product(v1 - v2, v3 - v4);
     v.x = cross_product(Vector2f::new(v.x, v1.x - v2.x), Vector2f::new(v.y, v3.x - v4.x)) / det;
     v.y = cross_product(Vector2f::new(v.x, v1.y - v2.y), Vector2::new(v.y, v3.y - v4.y)) / det;
     v
