@@ -28,36 +28,40 @@ fn main() {
     );
     window.set_vertical_sync_enabled(true);
 
-    /*let map: Vec<Wall> = vec![
+    let map: Vec<Wall> = vec![
         Wall {
             colour: Color::RED,
             p1: Vector2f::new(-100., 100.),
-            p2: Vector2f::new(100., 100.)
+            p2: Vector2f::new(100., 100.),
+            height: 5000.
         },
         Wall {
             colour: Color::GREEN,
             p1: Vector2f::new(100., 100.),
-            p2: Vector2f::new(100., -100.)
+            p2: Vector2f::new(100., -100.),
+            height: 5000.
         },
         Wall {
             colour: Color::YELLOW,
             p1: Vector2f::new(100., -100.),
-            p2: Vector2f::new(-100., -100.)
+            p2: Vector2f::new(-100., -100.),
+            height: 5000.
         },
         Wall {
             colour: Color::CYAN,
             p1: Vector2f::new(-100., -100.),
-            p2: Vector2f::new(-100., 100.)
+            p2: Vector2f::new(-100., 100.),
+            height: 5000.
         }
-    ];*/
-    let map= vec![
+    ];
+    /*let map= vec![
         Wall {
             colour: Color::YELLOW,
             p1: Vector2f::new(-100., 100.),
             p2: Vector2f::new(100., 100.),
             height: 1000.
         }
-    ];
+    ];*/
 
     let mut player = Thing {
         pos: Vector2f::new(0.0, 0.0),
@@ -78,11 +82,11 @@ fn main() {
         }
 
         process_movement(delta_time, &mut player);
-        let t_map = get_transformed_map(&map, &player);
+        let mut t_map = get_transformed_map(&map, &player);
 
         window.clear(&Color::BLACK);
         //draw_map(&mut window, &t_map, &player);
-        draw_3d_map(&mut window, &t_map, &player);
+        draw_3d_map(&mut window, &mut t_map, &player);
         window.display();
     }
 }
@@ -121,38 +125,83 @@ fn process_movement (delta_time: f32, player: &mut Thing) {
 }
 
 /* -= VECTOR AND RENDER STUFF =- */
-fn draw_3d_map (window: &mut RenderWindow, map: &Vec<Wall>, player: &Thing) {
+fn draw_3d_map (window: &mut RenderWindow, map: &mut Vec<Wall>, player: &Thing) {
     println!("({}, {})", player.pos.x, player.pos.y);
 
     // "To perspective project a co-ordinate, you simply take its x and y
     //  co-ordinate and divide them by the z co-ordinate"
+    // tz1 = wall.p1.y
+    // tz2 = wall.p2.y
+    // tx1 = wall.p1.x
+    // tx2 = wall.p2.x
     for wall in map {
-        let wz1 = wall.height / 2.;
-        let wz2 = -wz1;
-        let wx1 = -wall.p1.x * 16. / wall.p1.y;
-        let wx2 = -wall.p2.x * 16. / wall.p2.y;
-        let wy1a = wz2 / wall.p1.y;
-        let wy1b = wz1 / wall.p1.y;
-        let wy2a = wz2 / wall.p2.y;
-        let wy2b = wz1 / wall.p2.y;
+        if wall.p1.y > 0. || wall.p2.y  > 0. {
+            // View frustum clipping
+            let i1 = line_intersect(
+                wall.p1,
+                wall.p2,
+                Vector2f::new(-0.0001, 0.0001),
+                Vector2f::new(-20., 5.));
+            let i2 = line_intersect(
+                wall.p1,
+                wall.p2,
+                Vector2f::new(0.0001, 0.0001),
+                Vector2f::new(20., 5.));
+            if wall.p1.y <= 0. {
+                if i1.y > 0. {
+                    wall.p1 = i1
+                } else {
+                    wall.p1 = i2
+                }
+            }
+            if wall.p2.y <= 0. {
+                if i1.y > 0. {
+                    wall.p2 = i1;
+                } else {
+                    wall.p2 = i2;
+                }
+            }
 
-        let top_left = Vector2f::new(wx1, wy1a);
-        //println!("Top left: ({}, {})", top_left.x, top_left.y);
-        let top_right = Vector2f::new(wx2, wy2a);
-        //println!("Top right: ({}, {})", top_right.x, top_right.y);
-        let bottom_right = Vector2f::new(wx2, wy2b);
-        //println!("Bottom right: ({}, {})", bottom_right.x, bottom_right.y);
-        let bottom_left = Vector2f::new(wx1, wy1b);
-        //println!("Bottom left: ({}, {})", bottom_left.x, bottom_left.y);
+            // Perspective projection
+            let wz1 = wall.height / 2.;
+            let wz2 = -wz1;
+            let wx1 = wall.p1.x * 100. / wall.p1.y;
+            let wx2 = wall.p2.x * 100. / wall.p2.y;
+            let wy1a = wz2 / wall.p1.y;
+            let wy1b = wz1 / wall.p1.y;
+            let wy2a = wz2 / wall.p2.y;
+            let wy2b = wz1 / wall.p2.y;
 
-        // Top
-        draw_line(window, top_left, top_right, wall.colour);
-        // Right
-        draw_line(window, top_right, bottom_right, wall.colour);
-        // Bottom
-        draw_line(window, bottom_right, bottom_left, wall.colour);
-        // Left
-        draw_line(window, bottom_left, top_left, wall.colour);
+            let top_left = Vector2f::new(wx1, wy1a);
+            //println!("Top left: ({}, {})", top_left.x, top_left.y);
+            let top_right = Vector2f::new(wx2, wy2a);
+            //println!("Top right: ({}, {})", top_right.x, top_right.y);
+            let bottom_right = Vector2f::new(wx2, wy2b);
+            //println!("Bottom right: ({}, {})", bottom_right.x, bottom_right.y);
+            let bottom_left = Vector2f::new(wx1, wy1b);
+            //println!("Bottom left: ({}, {})", bottom_left.x, bottom_left.y);
+
+            let mut vertex_array = VertexArray::default();
+            vertex_array.set_primitive_type(PrimitiveType::Triangles);
+
+            vertex_array.append(&Vertex::with_pos_color(top_left, wall.colour));
+            vertex_array.append(&Vertex::with_pos_color(top_right, wall.colour));
+            vertex_array.append(&Vertex::with_pos_color(bottom_left, wall.colour));
+            vertex_array.append(&Vertex::with_pos_color(bottom_left, wall.colour));
+            vertex_array.append(&Vertex::with_pos_color(top_right, wall.colour));
+            vertex_array.append(&Vertex::with_pos_color(bottom_right, wall.colour));
+
+            //window.draw(&vertex_array);
+
+            // Top
+            draw_line(window, top_left, top_right, wall.colour);
+            // Right
+            draw_line(window, top_right, bottom_right, wall.colour);
+            // Bottom
+            draw_line(window, bottom_right, bottom_left, wall.colour);
+            // Left
+            draw_line(window, bottom_left, top_left, wall.colour);
+        }
     }
 }
 
