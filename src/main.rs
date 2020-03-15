@@ -18,10 +18,12 @@ struct Thing {
 
 const PLAYER_SPEED: f32 = 200.;
 const PLAYER_ROT_SPEED: f32 = PI;
+const WIDTH: u32 = 1920;
+const HEIGHT: u32 = 1080;
 
 fn main() {
     let mut window = RenderWindow::new(
-    (800, 600),
+    (WIDTH, HEIGHT),
     "3d-fps",
     Style::CLOSE,
     &Default::default(),
@@ -33,35 +35,35 @@ fn main() {
             colour: Color::RED,
             p1: Vector2f::new(-100., 100.),
             p2: Vector2f::new(100., 100.),
-            height: 5000.
+            height: 10000.
         },
         Wall {
             colour: Color::GREEN,
             p1: Vector2f::new(100., 100.),
             p2: Vector2f::new(100., -100.),
-            height: 5000.
+            height: 10000.
         },
         Wall {
             colour: Color::YELLOW,
             p1: Vector2f::new(100., -100.),
             p2: Vector2f::new(-100., -100.),
-            height: 5000.
+            height: 10000.
         },
         Wall {
             colour: Color::CYAN,
             p1: Vector2f::new(-100., -100.),
             p2: Vector2f::new(-100., 100.),
-            height: 5000.
+            height: 10000.
         }
     ];
-    /*let map= vec![
-        Wall {
-            colour: Color::YELLOW,
-            p1: Vector2f::new(-100., 100.),
-            p2: Vector2f::new(100., 100.),
-            height: 1000.
-        }
-    ];*/
+    // let map= vec![
+    //     Wall {
+    //         colour: Color::YELLOW,
+    //         p1: Vector2f::new(-100., 100.),
+    //         p2: Vector2f::new(100., 100.),
+    //         height: 5000.
+    //     }
+    // ];
 
     let mut player = Thing {
         pos: Vector2f::new(0.0, 0.0),
@@ -85,8 +87,8 @@ fn main() {
         let mut t_map = get_transformed_map(&map, &player);
 
         window.clear(&Color::BLACK);
-        //draw_map(&mut window, &t_map, &player);
         draw_3d_map(&mut window, &mut t_map, &player);
+        draw_map(&mut window, &t_map, &player);
         window.display();
     }
 }
@@ -125,8 +127,26 @@ fn process_movement (delta_time: f32, player: &mut Thing) {
 }
 
 /* -= VECTOR AND RENDER STUFF =- */
+fn draw_quad (window: &mut RenderWindow, top_left: Vector2f, top_right: Vector2f, bottom_right: Vector2f, bottom_left: Vector2f, colour: Color) {
+    let mut vertex_array = VertexArray::default();
+    vertex_array.set_primitive_type(PrimitiveType::Triangles);
+
+    let tl = sfml_vec(top_left);
+    let tr = sfml_vec(top_right);
+    let br = sfml_vec(bottom_right);
+    let bl = sfml_vec(bottom_left);
+    vertex_array.append(&Vertex::with_pos_color(tl, colour));
+    vertex_array.append(&Vertex::with_pos_color(tr, colour));
+    vertex_array.append(&Vertex::with_pos_color(bl, colour));
+    vertex_array.append(&Vertex::with_pos_color(bl, colour));
+    vertex_array.append(&Vertex::with_pos_color(tr, colour));
+    vertex_array.append(&Vertex::with_pos_color(br, colour));
+
+    window.draw(&vertex_array);
+}
+
 fn draw_3d_map (window: &mut RenderWindow, map: &mut Vec<Wall>, player: &Thing) {
-    println!("({}, {})", player.pos.x, player.pos.y);
+    let to_top = HEIGHT as f32 / 2.;
 
     // "To perspective project a co-ordinate, you simply take its x and y
     //  co-ordinate and divide them by the z co-ordinate"
@@ -165,42 +185,30 @@ fn draw_3d_map (window: &mut RenderWindow, map: &mut Vec<Wall>, player: &Thing) 
             // Perspective projection
             let wz1 = wall.height / 2.;
             let wz2 = -wz1;
-            let wx1 = wall.p1.x * 100. / wall.p1.y;
-            let wx2 = wall.p2.x * 100. / wall.p2.y;
+            let wx1 = wall.p1.x * 500. / wall.p1.y;
+            let wx2 = wall.p2.x * 500. / wall.p2.y;
             let wy1a = wz2 / wall.p1.y;
             let wy1b = wz1 / wall.p1.y;
             let wy2a = wz2 / wall.p2.y;
             let wy2b = wz1 / wall.p2.y;
 
             let top_left = Vector2f::new(wx1, wy1a);
-            //println!("Top left: ({}, {})", top_left.x, top_left.y);
             let top_right = Vector2f::new(wx2, wy2a);
-            //println!("Top right: ({}, {})", top_right.x, top_right.y);
             let bottom_right = Vector2f::new(wx2, wy2b);
-            //println!("Bottom right: ({}, {})", bottom_right.x, bottom_right.y);
             let bottom_left = Vector2f::new(wx1, wy1b);
-            //println!("Bottom left: ({}, {})", bottom_left.x, bottom_left.y);
 
-            let mut vertex_array = VertexArray::default();
-            vertex_array.set_primitive_type(PrimitiveType::Triangles);
 
-            vertex_array.append(&Vertex::with_pos_color(top_left, wall.colour));
-            vertex_array.append(&Vertex::with_pos_color(top_right, wall.colour));
-            vertex_array.append(&Vertex::with_pos_color(bottom_left, wall.colour));
-            vertex_array.append(&Vertex::with_pos_color(bottom_left, wall.colour));
-            vertex_array.append(&Vertex::with_pos_color(top_right, wall.colour));
-            vertex_array.append(&Vertex::with_pos_color(bottom_right, wall.colour));
+            let ceil_left = Vector2f::new(top_left.x, to_top);
+            let ceil_right = Vector2f::new(top_right.x, to_top);
+            let floor_left = Vector2f::new(bottom_left.x, -to_top);
+            let floor_right = Vector2f::new(bottom_right.x, -to_top);
 
-            //window.draw(&vertex_array);
-
-            // Top
-            draw_line(window, top_left, top_right, wall.colour);
-            // Right
-            draw_line(window, top_right, bottom_right, wall.colour);
-            // Bottom
-            draw_line(window, bottom_right, bottom_left, wall.colour);
-            // Left
-            draw_line(window, bottom_left, top_left, wall.colour);
+            // Ceiling
+            draw_quad(window, ceil_left, ceil_right, top_right, top_left, Color::WHITE);
+            // Floor
+            draw_quad(window, bottom_left, bottom_right, floor_right, floor_left, Color::BLUE);
+            // Wall
+            draw_quad(window, top_left, top_right, bottom_right, bottom_left, wall.colour);
         }
     }
 }
@@ -232,7 +240,8 @@ fn get_transformed_map (map: &Vec<Wall>, player: &Thing) -> Vec<Wall> {
 }
 
 fn sfml_vec (v: Vector2f) -> Vector2f {
-    Vector2f::new(v.x, -v.y)
+    let center = Vector2f::new(WIDTH as f32 / 2., HEIGHT as f32 / 2.);
+    center + Vector2f::new(v.x, -v.y)
 }
 
 fn rotate_vec (v: Vector2f, theta: f32) -> Vector2f {
@@ -248,13 +257,11 @@ fn rotate_vec (v: Vector2f, theta: f32) -> Vector2f {
 
 // Angle in radians
 fn draw_line_at_rotation (window: &mut RenderWindow, pos: Vector2f, length: f32, angle: f32, colour: Color) {
-    let center = Vector2f::new(400., 300.);
-
     let mut rct = RectangleShape::new();
     rct.set_size(Vector2f::new(length, 3.));
     rct.set_rotation(angle * 180. / PI - 90.);
     rct.set_fill_color(&colour);
-    rct.set_position(center + sfml_vec(pos));
+    rct.set_position(sfml_vec(pos));
 
     window.draw(&rct);
 }
@@ -278,12 +285,10 @@ fn draw_wall (wall: &Wall, window: &mut RenderWindow) {
 }
 
 fn draw_thing (window: &mut RenderWindow, thing: &Thing, player: &Thing) {
-    let center = Vector2f::new(400., 300.);
-
     let mut rct = RectangleShape::new();
     rct.set_size(Vector2f::new(10., 10.));
     rct.set_fill_color(&Color::GREEN);
-    rct.set_position(center + sfml_vec(thing.pos - player.pos) - Vector2f::new(5., 5.));
+    rct.set_position(sfml_vec(thing.pos - player.pos) - Vector2f::new(5., 5.));
 
     window.draw(&rct);
 
