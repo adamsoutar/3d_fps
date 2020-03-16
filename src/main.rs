@@ -20,44 +20,23 @@ fn main() {
     );
     window.set_vertical_sync_enabled(true);
 
-    let map: Vec<Wall> = vec![
-        Wall {
-            colour: Color::RED,
-            p1: Vector2f::new(-1., 1.),
-            p2: Vector2f::new(1., 1.),
-            height: 128.
-        },
-        Wall {
-            colour: Color::GREEN,
-            p1: Vector2f::new(1., 1.),
-            p2: Vector2f::new(1., -1.),
-            height: 128.
-        },
-        Wall {
-            colour: Color::YELLOW,
-            p1: Vector2f::new(1., -1.),
-            p2: Vector2f::new(-1., -1.),
-            height: 128.
-        },
-        Wall {
-            colour: Color::CYAN,
-            p1: Vector2f::new(-1., -1.),
-            p2: Vector2f::new(-1., 1.),
-            height: 128.
+    let map: Vec<Sector> = vec![
+        Sector {
+            vertices: vec![
+                Vector2f::new(-256., 256.),
+                Vector2f::new(256., 256.),
+                Vector2f::new(256., -256.),
+                Vector2f::new(-256., -256.)
+            ],
+            ceil_height: 128.,
+            floor_height: 0.
         }
     ];
-    // let map= vec![
-    //     Wall {
-    //         colour: Color::YELLOW,
-    //         p1: Vector2f::new(-100., 100.),
-    //         p2: Vector2f::new(100., 100.),
-    //         height: 5000.
-    //     }
-    // ];
 
     let mut player = Thing {
-        pos: Vector2f::new(0.0, 0.0),
-        rot: 0.0
+        pos: Vector2f::new(0., 0.),
+        zpos: PLAYER_EYE_HEIGHT,
+        rot: 0.
     };
 
     let mut clock = Clock::start();
@@ -74,26 +53,12 @@ fn main() {
         }
 
         process_movement(delta_time, &mut player);
-        let mut t_map = get_transformed_map(&map, &player);
 
         window.clear(&Color::BLACK);
-        draw_3d_map(&mut window, &mut t_map);
+        draw_3d_map(&mut window, &map, &player);
         // draw_map(&mut window, &t_map, &player);
         window.display();
     }
-}
-
-fn get_transformed_map (map: &Vec<Wall>, player: &Thing) -> Vec<Wall> {
-    let mut t_map = vec![];
-
-    for w in map {
-        let mut wall = w.clone();
-        wall.p1 = rotate_vec(wall.p1 - player.pos, -player.rot);
-        wall.p2 = rotate_vec(wall.p2 - player.pos, -player.rot);
-        t_map.push(wall);
-    }
-
-    t_map
 }
 
 /* Controls */
