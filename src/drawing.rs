@@ -1,6 +1,5 @@
 use sfml::graphics::*;
 use sfml::system::*;
-use std::f32::consts::PI;
 
 use crate::vector_utils::*;
 use crate::constants::*;
@@ -16,7 +15,6 @@ pub fn draw_3d_map (window: &mut RenderWindow, map: &Vec<Sector>, player: &Thing
     // TODO: Use the player's sector, not map[0]
     process_portals(0, map, 0, &mut portal_stack);
 
-    println!("There are {} sectors on the stack", portal_stack.len());
     for _ in 0..portal_stack.len() {
         draw_sector(window, &portal_stack.pop().unwrap(), player);
     }

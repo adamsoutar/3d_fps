@@ -1,5 +1,4 @@
 use sfml::system::*;
-use sfml::graphics::*;
 
 #[derive(Clone)]
 pub struct Sector {
