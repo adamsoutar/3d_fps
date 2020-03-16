@@ -9,11 +9,37 @@ use crate::map::*;
 pub fn draw_3d_map (window: &mut RenderWindow, map: &Vec<Sector>, player: &Thing) {
     // Traverse sectors, then draw them backwards "on top of each other"
     // to create see-through-able portals
-    let mut portal_stack: Vec<&Sector> = vec![];
-    portal_stack.push(&map[0]);
+    let mut portal_stack: Vec<Sector> = vec![];
+    portal_stack.push(map[0].clone());
 
+    // What else can we see?
+    // TODO: Use the player's sector, not map[0]
+    process_portals(0, map, 0, &mut portal_stack);
+
+    println!("There are {} sectors on the stack", portal_stack.len());
     for _ in 0..portal_stack.len() {
-        draw_sector(window, portal_stack.pop().unwrap(), player);
+        draw_sector(window, &portal_stack.pop().unwrap(), player);
+    }
+}
+
+fn process_portals (sect_id: usize, map: &Vec<Sector>, came_from: usize, stack: &mut Vec<Sector>) {
+    let sect = &map[sect_id];
+    for side in &sect.sides {
+        if side.neighbor_sect != -1 {
+            if stack.len() >= MAX_PORTAL_DRAWS {
+                return;
+            }
+            let nu = side.neighbor_sect as usize;
+
+            // Don't go back in infinite recursion
+            // TODO: Make this "don't go back over the side you just came from"
+            if nu == came_from {
+                continue;
+            }
+
+            stack.push(map[nu].clone());
+            process_portals(nu, map, sect_id, stack);
+        }
     }
 }
 
@@ -26,11 +52,11 @@ fn draw_sector (window: &mut RenderWindow, sect: &Sector, player: &Thing) {
         p1 = rotate_vec(p1 - player.pos, -player.rot);
         p2 = rotate_vec(p2 - player.pos, -player.rot);
 
-        draw_wall(window, &p1, &p2, &sect, player);
+        draw_wall(window, &p1, &p2, &sect, side, player);
     }
 }
 
-fn draw_wall (window: &mut RenderWindow, px1: &Vector2f, px2: &Vector2f, sect: &Sector, player: &Thing) {
+fn draw_wall (window: &mut RenderWindow, px1: &Vector2f, px2: &Vector2f, sect: &Sector, side: &Side, player: &Thing) {
     let mut p1 = px1.clone();
     let mut p2 = px2.clone();
 
@@ -85,12 +111,19 @@ fn draw_wall (window: &mut RenderWindow, px1: &Vector2f, px2: &Vector2f, sect: &
         let floor_left = Vector2f::new(bottom_left.x, bottom_left.y - to_top);
         let floor_right = Vector2f::new(bottom_right.x, bottom_right.y - to_top);
 
-        // Wall
-        draw_quad(window, top_left, top_right, bottom_right, bottom_left, Color::YELLOW);
         // Ceiling
-        draw_quad(window, ceil_left, ceil_right, top_right, top_left, Color::WHITE);
+        draw_quad(window, ceil_left, ceil_right, top_right, top_left, Color::rgb(34, 34, 34));
         // Floor
-        draw_quad(window, bottom_left, bottom_right, floor_right, floor_left, Color::BLUE);
+        draw_quad(window, bottom_left, bottom_right, floor_right, floor_left, Color::rgb(0, 10, 170));
+
+        // Don't draw walls over portals
+        // TODO: Portal mids here
+        if side.neighbor_sect != -1 {
+            return;
+        }
+
+        // Wall
+        draw_quad(window, top_left, top_right, bottom_right, bottom_left, Color::rgb(170, 170, 170));
     }
 }
 

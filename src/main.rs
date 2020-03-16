@@ -20,32 +20,82 @@ fn main() {
     );
     window.set_vertical_sync_enabled(true);
 
+    // TODO (SOON): Load maps from files
     let map: Vec<Sector> = vec![
+        // Spawn room
         Sector {
             sides: vec![
                 Side {
                     p1: Vector2f::new(-256., 256.),
+                    p2: Vector2f::new(78., 256.),
+                    neighbor_sect: -1,
+                    neighbor_side: -1
+                },
+                Side {
+                    p1: Vector2f::new(78., 256.),
+                    p2: Vector2f::new(178., 256.),
+                    // This line is the portal to the corridor.
+                    neighbor_sect: 1,
+                    neighbor_side: 0
+                },
+                Side {
+                    p1: Vector2f::new(178., 256.),
                     p2: Vector2f::new(256., 256.),
-                    neighbor: -1
+                    neighbor_sect: -1,
+                    neighbor_side: -1
                 },
                 Side {
                     p1: Vector2f::new(256., 256.),
                     p2: Vector2f::new(256., -256.),
-                    neighbor: -1
+                    neighbor_sect: -1,
+                    neighbor_side: -1
                 },
                 Side {
                     p1: Vector2f::new(256., -256.),
                     p2: Vector2f::new(-256., -256.),
-                    neighbor: -1
+                    neighbor_sect: -1,
+                    neighbor_side: -1
                 },
                 Side {
                     p1: Vector2f::new(-256., -256.),
                     p2: Vector2f::new(-256., 256.),
-                    neighbor: -1
+                    neighbor_sect: -1,
+                    neighbor_side: -1
                 }
             ],
             ceil_height: 128.,
             floor_height: 0.
+        },
+        // The corridor
+        Sector {
+            sides: vec![
+                Side {
+                    p1: Vector2f::new(78., 256.),
+                    p2: Vector2f::new(178., 256.),
+                    neighbor_sect: 0,
+                    neighbor_side: 1
+                },
+                Side {
+                    p1: Vector2f::new(178., 256.),
+                    p2: Vector2f::new(178., 768.),
+                    neighbor_side: -1,
+                    neighbor_sect: -1
+                },
+                Side {
+                    p1: Vector2f::new(178., 768.),
+                    p2: Vector2f::new(78., 768.),
+                    neighbor_sect: -1,
+                    neighbor_side: -1
+                },
+                Side {
+                    p1: Vector2f::new(78., 768.),
+                    p2: Vector2f::new(78., 256.),
+                    neighbor_side: -1,
+                    neighbor_sect: -1
+                }
+            ],
+            floor_height: 16.,
+            ceil_height: 100.
         }
     ];
 
