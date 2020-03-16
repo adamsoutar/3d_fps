@@ -22,11 +22,27 @@ fn main() {
 
     let map: Vec<Sector> = vec![
         Sector {
-            vertices: vec![
-                Vector2f::new(-256., 256.),
-                Vector2f::new(256., 256.),
-                Vector2f::new(256., -256.),
-                Vector2f::new(-256., -256.)
+            sides: vec![
+                Side {
+                    p1: Vector2f::new(-256., 256.),
+                    p2: Vector2f::new(256., 256.),
+                    neighbor: -1
+                },
+                Side {
+                    p1: Vector2f::new(256., 256.),
+                    p2: Vector2f::new(256., -256.),
+                    neighbor: -1
+                },
+                Side {
+                    p1: Vector2f::new(256., -256.),
+                    p2: Vector2f::new(-256., -256.),
+                    neighbor: -1
+                },
+                Side {
+                    p1: Vector2f::new(-256., -256.),
+                    p2: Vector2f::new(-256., 256.),
+                    neighbor: -1
+                }
             ],
             ceil_height: 128.,
             floor_height: 0.
