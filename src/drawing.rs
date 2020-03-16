@@ -8,26 +8,28 @@ use crate::map::*;
 pub fn draw_3d_map (window: &mut RenderWindow, map: &Vec<Sector>, player: &Thing) {
     // Traverse sectors, then draw them backwards "on top of each other"
     // to create see-through-able portals
-    let mut portal_stack: Vec<Sector> = vec![];
-    portal_stack.push(map[0].clone());
+
+    // TODO: Use the player's sector, not map[0]
+    let current_sector = 0;
+    let mut portal_stack: Vec<usize> = vec![];
+    portal_stack.push(current_sector);
 
     // What else can we see?
-    // TODO: Use the player's sector, not map[0]
-    process_portals(0, map, 0, &mut portal_stack);
+    process_portals(current_sector, map, current_sector, &mut portal_stack);
 
     for _ in 0..portal_stack.len() {
-        draw_sector(window, &portal_stack.pop().unwrap(), player);
+        draw_sector(window, &map[portal_stack.pop().unwrap()], player);
     }
 }
 
-fn process_portals (sect_id: usize, map: &Vec<Sector>, came_from: usize, stack: &mut Vec<Sector>) {
+fn process_portals (sect_id: usize, map: &Vec<Sector>, came_from: usize, stack: &mut Vec<usize>) {
     let sect = &map[sect_id];
     for side in &sect.sides {
-        if side.neighbor_sect != -1 {
+        if side.neighbour_sect != -1 {
             if stack.len() >= MAX_PORTAL_DRAWS {
                 return;
             }
-            let nu = side.neighbor_sect as usize;
+            let nu = side.neighbour_sect as usize;
 
             // Don't go back in infinite recursion
             // TODO: Make this "don't go back over the side you just came from"
@@ -35,7 +37,7 @@ fn process_portals (sect_id: usize, map: &Vec<Sector>, came_from: usize, stack: 
                 continue;
             }
 
-            stack.push(map[nu].clone());
+            stack.push(nu);
             process_portals(nu, map, sect_id, stack);
         }
     }
@@ -115,8 +117,11 @@ fn draw_wall (window: &mut RenderWindow, px1: &Vector2f, px2: &Vector2f, sect: &
         draw_quad(window, bottom_left, bottom_right, floor_right, floor_left, Color::rgb(0, 10, 170));
 
         // Don't draw walls over portals
-        // TODO: Portal mids here
-        if side.neighbor_sect != -1 {
+        if side.neighbour_sect != -1 {
+            // Uppers and lowers
+            
+
+            // TODO: Portal mids here
             return;
         }
 

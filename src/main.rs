@@ -28,39 +28,39 @@ fn main() {
                 Side {
                     p1: Vector2f::new(-256., 256.),
                     p2: Vector2f::new(78., 256.),
-                    neighbor_sect: -1,
-                    neighbor_side: -1
+                    neighbour_sect: -1,
+                    neighbour_side: -1
                 },
                 Side {
                     p1: Vector2f::new(78., 256.),
                     p2: Vector2f::new(178., 256.),
                     // This line is the portal to the corridor.
-                    neighbor_sect: 1,
-                    neighbor_side: 0
+                    neighbour_sect: 1,
+                    neighbour_side: 0
                 },
                 Side {
                     p1: Vector2f::new(178., 256.),
                     p2: Vector2f::new(256., 256.),
-                    neighbor_sect: -1,
-                    neighbor_side: -1
+                    neighbour_sect: -1,
+                    neighbour_side: -1
                 },
                 Side {
                     p1: Vector2f::new(256., 256.),
                     p2: Vector2f::new(256., -256.),
-                    neighbor_sect: -1,
-                    neighbor_side: -1
+                    neighbour_sect: -1,
+                    neighbour_side: -1
                 },
                 Side {
                     p1: Vector2f::new(256., -256.),
                     p2: Vector2f::new(-256., -256.),
-                    neighbor_sect: -1,
-                    neighbor_side: -1
+                    neighbour_sect: -1,
+                    neighbour_side: -1
                 },
                 Side {
                     p1: Vector2f::new(-256., -256.),
                     p2: Vector2f::new(-256., 256.),
-                    neighbor_sect: -1,
-                    neighbor_side: -1
+                    neighbour_sect: -1,
+                    neighbour_side: -1
                 }
             ],
             ceil_height: 128.,
@@ -72,26 +72,26 @@ fn main() {
                 Side {
                     p1: Vector2f::new(78., 256.),
                     p2: Vector2f::new(178., 256.),
-                    neighbor_sect: 0,
-                    neighbor_side: 1
+                    neighbour_sect: 0,
+                    neighbour_side: 1
                 },
                 Side {
                     p1: Vector2f::new(178., 256.),
                     p2: Vector2f::new(178., 768.),
-                    neighbor_side: -1,
-                    neighbor_sect: -1
+                    neighbour_side: -1,
+                    neighbour_sect: -1
                 },
                 Side {
                     p1: Vector2f::new(178., 768.),
                     p2: Vector2f::new(78., 768.),
-                    neighbor_sect: -1,
-                    neighbor_side: -1
+                    neighbour_sect: -1,
+                    neighbour_side: -1
                 },
                 Side {
                     p1: Vector2f::new(78., 768.),
                     p2: Vector2f::new(78., 256.),
-                    neighbor_side: -1,
-                    neighbor_sect: -1
+                    neighbour_side: -1,
+                    neighbour_sect: -1
                 }
             ],
             floor_height: 16.,
@@ -109,7 +109,7 @@ fn main() {
 
     loop {
         let delta_time = clock.restart().as_seconds();
-        //println!("{} FPS", 1. / delta_time);
+        // println!("{} FPS", 1. / delta_time);
 
         while let Some(event) = window.poll_event() {
             match event {
