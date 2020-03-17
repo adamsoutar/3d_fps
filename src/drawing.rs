@@ -9,13 +9,11 @@ pub fn draw_3d_map (window: &mut RenderWindow, map: &Vec<Sector>, player: &Thing
     // Traverse sectors, then draw them backwards "on top of each other"
     // to create see-through-able portals
 
-    // TODO: Use the player's sector, not map[0]
-    let current_sector = 0;
     let mut portal_stack: Vec<usize> = vec![];
-    portal_stack.push(current_sector);
+    portal_stack.push(player.sector);
 
     // What else can we see?
-    process_portals(current_sector, map, current_sector, &mut portal_stack);
+    process_portals(player.sector, map, player.sector, &mut portal_stack);
 
     for _ in 0..portal_stack.len() {
         draw_sector(window, map, portal_stack.pop().unwrap(), player);
@@ -23,6 +21,8 @@ pub fn draw_3d_map (window: &mut RenderWindow, map: &Vec<Sector>, player: &Thing
 }
 
 fn process_portals (sect_id: usize, map: &Vec<Sector>, came_from: usize, stack: &mut Vec<usize>) {
+    // TODO: Don't look at portals that are behind us
+
     let sect = &map[sect_id];
     for side in &sect.sides {
         if side.neighbour_sect != -1 {
@@ -127,19 +127,19 @@ fn draw_wall (window: &mut RenderWindow, px1: &Vector2f, px2: &Vector2f, map: &V
 
             if c_diff > 0. {
                 // We should draw an upper
-                let t_l = world_to_screen_pos(Vector3f::new(side.p1.x, side.p1.y, sect.ceil_height), player);
-                let t_r = world_to_screen_pos(Vector3f::new(side.p2.x, side.p2.y, sect.ceil_height), player);
-                let b_r = world_to_screen_pos(Vector3f::new(side.p2.x, side.p2.y, sect.ceil_height - c_diff), player);
-                let b_l = world_to_screen_pos(Vector3f::new(side.p1.x, side.p1.y, sect.ceil_height - c_diff), player);
+                let t_l = raw_screen_pos(Vector3f::new(p1.x, p1.y, sect.ceil_height), player);
+                let t_r = raw_screen_pos(Vector3f::new(p2.x, p2.y, sect.ceil_height), player);
+                let b_r = raw_screen_pos(Vector3f::new(p2.x, p2.y, sect.ceil_height - c_diff), player);
+                let b_l = raw_screen_pos(Vector3f::new(p1.x, p1.y, sect.ceil_height - c_diff), player);
                 draw_quad(window, t_l, t_r, b_r, b_l, Color::rgb(132, 24, 216));
             }
 
             if f_diff > 0. {
                 // We should draw a lower
-                let t_l = world_to_screen_pos(Vector3f::new(side.p1.x, side.p1.y, sect.floor_height + f_diff), player);
-                let t_r = world_to_screen_pos(Vector3f::new(side.p2.x, side.p2.y, sect.floor_height + f_diff), player);
-                let b_r = world_to_screen_pos(Vector3f::new(side.p2.x, side.p2.y, sect.floor_height), player);
-                let b_l = world_to_screen_pos(Vector3f::new(side.p1.x, side.p1.y, sect.floor_height), player);
+                let t_l = raw_screen_pos(Vector3f::new(p1.x, p1.y, sect.floor_height + f_diff), player);
+                let t_r = raw_screen_pos(Vector3f::new(p2.x, p2.y, sect.floor_height + f_diff), player);
+                let b_r = raw_screen_pos(Vector3f::new(p2.x, p2.y, sect.floor_height), player);
+                let b_l = raw_screen_pos(Vector3f::new(p1.x, p1.y, sect.floor_height), player);
                 draw_quad(window, t_l, t_r, b_r, b_l, Color::rgb(132, 24, 216));
             }
 
@@ -150,6 +150,13 @@ fn draw_wall (window: &mut RenderWindow, px1: &Vector2f, px2: &Vector2f, map: &V
         // Wall
         draw_quad(window, top_left, top_right, bottom_right, bottom_left, Color::rgb(170, 170, 170));
     }
+}
+
+fn raw_screen_pos (v: Vector3f, player: &Thing) -> Vector2f {
+    let p = Vector2f::new(v.x, v.y);
+    let x = p.x * XFOV / p.y;
+    let y = (v.z - player.zpos) * YFOV / p.y;
+    Vector2::new(x, y)
 }
 
 fn world_to_screen_pos (v: Vector3f, player: &Thing) -> Vector2f {

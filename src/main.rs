@@ -102,7 +102,8 @@ fn main() {
     let mut player = Thing {
         pos: Vector2f::new(0., 0.),
         zpos: PLAYER_EYE_HEIGHT,
-        rot: 0.
+        rot: 0.,
+        sector: 0
     };
 
     let mut clock = Clock::start();
@@ -118,7 +119,7 @@ fn main() {
             }
         }
 
-        process_movement(delta_time, &mut player);
+        process_movement(delta_time, &mut player, &map);
 
         window.clear(&Color::BLACK);
         draw_3d_map(&mut window, &map, &player);
@@ -128,7 +129,7 @@ fn main() {
 }
 
 /* Controls */
-fn process_movement (delta_time: f32, player: &mut Thing) {
+fn process_movement (delta_time: f32, player: &mut Thing, map: &Vec<Sector>) {
     // Forward, Backward, Strafe
     let mut movement = Vector2f::new(0., 0.);
     let mv = PLAYER_SPEED * delta_time;
@@ -146,7 +147,23 @@ fn process_movement (delta_time: f32, player: &mut Thing) {
         movement += Vector2f::new(mv, 0.);
     }
 
-    player.pos += rotate_vec(movement, player.rot);
+    let mut rot_mov = rotate_vec(movement, player.rot);
+
+    // TODO: Collision detection
+    // let sect = &map[player.sector];
+    // for s in 0..sect.sides.len() {
+    //     let side = &sect.sides[s];
+    //     let itc = line_intersect(side.p1, side.p2, player.pos, player.pos + rot_mov);
+    //
+    //     // NaN check, we'll never hit that wall going this way
+    //     if itc.x != itc.x || itc.y != itc.y {
+    //         continue;
+    //     }
+    //
+    //     let toitc = itc - player.pos;
+    // }
+
+    player.pos += rot_mov;
 
     // Rotation
     let rot = PLAYER_ROT_SPEED * delta_time;

@@ -16,5 +16,6 @@ pub struct Side {
 pub struct Thing {
     pub pos: Vector2f, // Position
     pub zpos: f32,     // Gravity-affected vert. position
-    pub rot: f32       // Rotation
+    pub rot: f32,      // Rotation
+    pub sector: usize  // Sector in which the object resides
 }

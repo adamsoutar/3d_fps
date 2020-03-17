@@ -29,3 +29,7 @@ pub fn rotate_vec (v: Vector2f, theta: f32) -> Vector2f {
         v.x * st + v.y * ct
     )
 }
+
+pub fn vector_magnitude (v: &Vector2f) -> f32 {
+    (v.x * v.x + v.y * v.y).sqrt()
+}
