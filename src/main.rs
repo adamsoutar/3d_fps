@@ -13,10 +13,10 @@ use map::*;
 
 fn main() {
     let mut window = RenderWindow::new(
-    (WIDTH, HEIGHT),
-    "3d-fps",
-    Style::CLOSE,
-    &Default::default(),
+        (WIDTH, HEIGHT),
+        "3d-fps",
+        Style::CLOSE,
+        &Default::default(),
     );
     window.set_vertical_sync_enabled(true);
 
@@ -103,16 +103,18 @@ fn main() {
         pos: Vector2f::new(0., 0.),
         zpos: PLAYER_EYE_HEIGHT,
         falling: false,
-        velocity: Vector3f::new(0.,0.,0.),
+        fall_velocity: 0.,
+        velocity: Vector2f::new(0.,0.),
         rot: 0.,
         sector: 0
     };
 
     let mut clock = Clock::start();
+    let mut accum = 0.;
 
     loop {
         let delta_time = clock.restart().as_seconds();
-        // println!("{} FPS", 1. / delta_time);
+        println!("{} FPS", 1. / delta_time);
 
         while let Some(event) = window.poll_event() {
             match event {
@@ -121,7 +123,12 @@ fn main() {
             }
         }
 
-        process_movement(delta_time, &mut player, &map);
+        accum += delta_time;
+        if accum > PHYSICS_TIMESTEP {
+            accum -= PHYSICS_TIMESTEP;
+            // Do physics step
+            process_movement(&mut player, &map);
+        }
 
         window.clear(&Color::BLACK);
         draw_3d_map(&mut window, &map, &player);
@@ -131,38 +138,44 @@ fn main() {
 }
 
 /* Controls */
-fn process_movement (delta_time: f32, player: &mut Thing, map: &Vec<Sector>) {
-    // Forward, Backward, Strafe
-    let mut movement = Vector2f::new(0., 0.);
-    let mv = PLAYER_SPEED * delta_time;
+fn process_movement (player: &mut Thing, map: &Vec<Sector>) {
+    // This part should run at 35 fps
+
+    let mut acc = Vector2f::new(0., 0.);
+    let mv = PLAYER_ACCELERATION;
 
     if Key::is_pressed(Key::W) {
-        movement += Vector2f::new(0., mv);
+        acc += Vector2f::new(0., mv);
     }
     if Key::is_pressed(Key::A) {
-        movement += Vector2f::new(-mv, 0.);
+        acc += Vector2f::new(-mv, 0.);
     }
     if Key::is_pressed(Key::S) {
-        movement += Vector2f::new(0., -mv);
+        acc += Vector2f::new(0., -mv);
     }
     if Key::is_pressed(Key::D) {
-        movement += Vector2f::new(mv, 0.);
+        acc += Vector2f::new(mv, 0.);
     }
 
-    let mut rot_mov = rotate_vec(movement, player.rot);
+    let rot_acc = rotate_vec(acc, player.rot);
+    player.velocity += rot_acc;
+
+    // Apply friction
+    player.velocity *= FRICTION;
 
     /* COLLISION DETECTION */
     // TODO: Could probably be a function on its own
     let sect = &map[player.sector];
+    let next_frame = player.pos + player.velocity;
     for s in 0..sect.sides.len() {
         let side = &sect.sides[s];
 
         // We'll cross the wall if we move
-        let lsi = segment_intersection(&side.p1, &side.p2, &player.pos, &(player.pos + rot_mov));
+        let lsi = segment_intersection(&side.p1, &side.p2, &player.pos, &next_frame);
         if lsi == SegmentIntersection::Intersection {
             if side.neighbour_sect == -1 {
                 // TODO: Vector projection
-                rot_mov = Vector2f::new(0., 0.);
+                player.velocity = Vector2f::new(0., 0.);
                 continue;
             }
 
@@ -174,7 +187,7 @@ fn process_movement (delta_time: f32, player: &mut Thing, map: &Vec<Sector>) {
             // We can't step that high
             if step > PLAYER_MAX_STEP_HEIGHT {
                 // TODO: Vector projection
-                rot_mov = Vector2f::new(0., 0.);
+                player.velocity = Vector2f::new(0., 0.);
                 continue;
             }
 
@@ -185,17 +198,14 @@ fn process_movement (delta_time: f32, player: &mut Thing, map: &Vec<Sector>) {
     }
     /* END COLLISION DETECTION */
 
-    player.pos += rot_mov;
-
     // Gravity
     if player.falling {
-        player.velocity.z -= GRAVITY;
+        player.fall_velocity -= GRAVITY;
     }
 
     // Apply velocity
-    let vel2d = Vector2f::new(player.velocity.x, player.velocity.y);
-    player.pos += vel2d;
-    player.zpos += player.velocity.z;
+    player.pos += player.velocity;
+    player.zpos += player.fall_velocity;
 
     // Landing
     if player.zpos < sect.floor_height + PLAYER_EYE_HEIGHT {
@@ -204,7 +214,7 @@ fn process_movement (delta_time: f32, player: &mut Thing, map: &Vec<Sector>) {
     }
 
     // Rotation
-    let rot = PLAYER_ROT_SPEED * delta_time;
+    let rot = PLAYER_ROT_SPEED;
     let mut rt = 0.;
     if Key::is_pressed(Key::Left) {
         rt += -rot;
