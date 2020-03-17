@@ -18,7 +18,7 @@ pub fn draw_3d_map (window: &mut RenderWindow, map: &Vec<Sector>, player: &Thing
     process_portals(current_sector, map, current_sector, &mut portal_stack);
 
     for _ in 0..portal_stack.len() {
-        draw_sector(window, &map[portal_stack.pop().unwrap()], player);
+        draw_sector(window, map, portal_stack.pop().unwrap(), player);
     }
 }
 
@@ -43,7 +43,8 @@ fn process_portals (sect_id: usize, map: &Vec<Sector>, came_from: usize, stack: 
     }
 }
 
-fn draw_sector (window: &mut RenderWindow, sect: &Sector, player: &Thing) {
+fn draw_sector (window: &mut RenderWindow, map: &Vec<Sector>, sect_id: usize, player: &Thing) {
+    let sect = &map[sect_id];
     for side in &sect.sides {
         let mut p1 = side.p1.clone();
         let mut p2 = side.p2.clone();
@@ -52,13 +53,14 @@ fn draw_sector (window: &mut RenderWindow, sect: &Sector, player: &Thing) {
         p1 = rotate_vec(p1 - player.pos, -player.rot);
         p2 = rotate_vec(p2 - player.pos, -player.rot);
 
-        draw_wall(window, &p1, &p2, &sect, side, player);
+        draw_wall(window, &p1, &p2, map, sect_id, side, player);
     }
 }
 
-fn draw_wall (window: &mut RenderWindow, px1: &Vector2f, px2: &Vector2f, sect: &Sector, side: &Side, player: &Thing) {
+fn draw_wall (window: &mut RenderWindow, px1: &Vector2f, px2: &Vector2f, map: &Vec<Sector>, sect_id: usize, side: &Side, player: &Thing) {
     let mut p1 = px1.clone();
     let mut p2 = px2.clone();
+    let sect = &map[sect_id];
 
     if p1.y > 0. || p2.y  > 0. {
         // View frustum clipping
@@ -119,7 +121,27 @@ fn draw_wall (window: &mut RenderWindow, px1: &Vector2f, px2: &Vector2f, sect: &
         // Don't draw walls over portals
         if side.neighbour_sect != -1 {
             // Uppers and lowers
-            
+            let n = &map[side.neighbour_sect as usize];
+            let f_diff = n.floor_height - sect.floor_height;
+            let c_diff = sect.ceil_height - n.ceil_height;
+
+            if c_diff > 0. {
+                // We should draw an upper
+                let t_l = world_to_screen_pos(Vector3f::new(side.p1.x, side.p1.y, sect.ceil_height), player);
+                let t_r = world_to_screen_pos(Vector3f::new(side.p2.x, side.p2.y, sect.ceil_height), player);
+                let b_r = world_to_screen_pos(Vector3f::new(side.p2.x, side.p2.y, sect.ceil_height - c_diff), player);
+                let b_l = world_to_screen_pos(Vector3f::new(side.p1.x, side.p1.y, sect.ceil_height - c_diff), player);
+                draw_quad(window, t_l, t_r, b_r, b_l, Color::rgb(132, 24, 216));
+            }
+
+            if f_diff > 0. {
+                // We should draw a lower
+                let t_l = world_to_screen_pos(Vector3f::new(side.p1.x, side.p1.y, sect.floor_height + f_diff), player);
+                let t_r = world_to_screen_pos(Vector3f::new(side.p2.x, side.p2.y, sect.floor_height + f_diff), player);
+                let b_r = world_to_screen_pos(Vector3f::new(side.p2.x, side.p2.y, sect.floor_height), player);
+                let b_l = world_to_screen_pos(Vector3f::new(side.p1.x, side.p1.y, sect.floor_height), player);
+                draw_quad(window, t_l, t_r, b_r, b_l, Color::rgb(132, 24, 216));
+            }
 
             // TODO: Portal mids here
             return;
@@ -128,6 +150,13 @@ fn draw_wall (window: &mut RenderWindow, px1: &Vector2f, px2: &Vector2f, sect: &
         // Wall
         draw_quad(window, top_left, top_right, bottom_right, bottom_left, Color::rgb(170, 170, 170));
     }
+}
+
+fn world_to_screen_pos (v: Vector3f, player: &Thing) -> Vector2f {
+    let p = rotate_vec(Vector2f::new(v.x, v.y) - player.pos, -player.rot);
+    let x = p.x * XFOV / p.y;
+    let y = (v.z - player.zpos) * YFOV / p.y;
+    Vector2::new(x, y)
 }
 
 pub fn draw_quad (window: &mut RenderWindow, top_left: Vector2f, top_right: Vector2f, bottom_right: Vector2f, bottom_left: Vector2f, colour: Color) {
