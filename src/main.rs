@@ -149,19 +149,23 @@ fn process_movement (delta_time: f32, player: &mut Thing, map: &Vec<Sector>) {
 
     let mut rot_mov = rotate_vec(movement, player.rot);
 
-    // TODO: Collision detection
-    // let sect = &map[player.sector];
-    // for s in 0..sect.sides.len() {
-    //     let side = &sect.sides[s];
-    //     let itc = line_intersect(side.p1, side.p2, player.pos, player.pos + rot_mov);
-    //
-    //     // NaN check, we'll never hit that wall going this way
-    //     if itc.x != itc.x || itc.y != itc.y {
-    //         continue;
-    //     }
-    //
-    //     let toitc = itc - player.pos;
-    // }
+    let sect = &map[player.sector];
+    for s in 0..sect.sides.len() {
+        let side = &sect.sides[s];
+
+        // We'll cross the wall if we move
+        let lsi = segment_intersection(&side.p1, &side.p2, &player.pos, &(player.pos + rot_mov));
+        if lsi == SegmentIntersection::Intersection {
+            if side.neighbour_sect == -1 {
+                // TODO: Vector projection
+                rot_mov = Vector2f::new(0., 0.);
+                break;
+            }
+
+            // It's a portal, so we're moving sectors
+            player.sector = side.neighbour_sect as usize;
+        }
+    }
 
     player.pos += rot_mov;
 
