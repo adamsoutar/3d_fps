@@ -102,6 +102,8 @@ fn main() {
     let mut player = Thing {
         pos: Vector2f::new(0., 0.),
         zpos: PLAYER_EYE_HEIGHT,
+        falling: false,
+        velocity: Vector3f::new(0.,0.,0.),
         rot: 0.,
         sector: 0
     };
@@ -149,6 +151,8 @@ fn process_movement (delta_time: f32, player: &mut Thing, map: &Vec<Sector>) {
 
     let mut rot_mov = rotate_vec(movement, player.rot);
 
+    /* COLLISION DETECTION */
+    // TODO: Could probably be a function on its own
     let sect = &map[player.sector];
     for s in 0..sect.sides.len() {
         let side = &sect.sides[s];
@@ -159,15 +163,45 @@ fn process_movement (delta_time: f32, player: &mut Thing, map: &Vec<Sector>) {
             if side.neighbour_sect == -1 {
                 // TODO: Vector projection
                 rot_mov = Vector2f::new(0., 0.);
-                break;
+                continue;
             }
 
-            // It's a portal, so we're moving sectors
-            player.sector = side.neighbour_sect as usize;
+            // It's a portal, so we might be moving sectors
+            let nu = side.neighbour_sect as usize;
+            let ns = &map[nu];
+            let step = ns.floor_height - sect.floor_height;
+
+            // We can't step that high
+            if step > PLAYER_MAX_STEP_HEIGHT {
+                // TODO: Vector projection
+                rot_mov = Vector2f::new(0., 0.);
+                continue;
+            }
+
+            // We're moving to that sector!
+            player.sector = nu;
+            if step < 0. { player.falling = true }
         }
     }
+    /* END COLLISION DETECTION */
 
     player.pos += rot_mov;
+
+    // Gravity
+    if player.falling {
+        player.velocity.z -= GRAVITY;
+    }
+
+    // Apply velocity
+    let vel2d = Vector2f::new(player.velocity.x, player.velocity.y);
+    player.pos += vel2d;
+    player.zpos += player.velocity.z;
+
+    // Landing
+    if player.zpos < sect.floor_height + PLAYER_EYE_HEIGHT {
+        player.zpos = sect.floor_height + PLAYER_EYE_HEIGHT;
+        player.falling = false;
+    }
 
     // Rotation
     let rot = PLAYER_ROT_SPEED * delta_time;
