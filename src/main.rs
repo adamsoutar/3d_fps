@@ -90,8 +90,8 @@ fn main() {
                 Side {
                     p1: Vector2f::new(178., 256.),
                     p2: Vector2f::new(78., 256.),
-                    neighbour_side: -1,
-                    neighbour_sect: -1
+                    neighbour_side: 1,
+                    neighbour_sect: 0
                 }
             ],
             floor_height: 16.,
