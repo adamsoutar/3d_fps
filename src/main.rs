@@ -18,7 +18,7 @@ fn main() {
         Style::CLOSE,
         &Default::default(),
     );
-    window.set_vertical_sync_enabled(true);
+    window.set_vertical_sync_enabled(false);
 
     // TODO (SOON): Load maps from files
     let map: Vec<Sector> = vec![
@@ -71,24 +71,24 @@ fn main() {
             sides: vec![
                 Side {
                     p1: Vector2f::new(78., 256.),
-                    p2: Vector2f::new(178., 256.),
-                    neighbour_sect: 0,
-                    neighbour_side: 1
-                },
-                Side {
-                    p1: Vector2f::new(178., 256.),
-                    p2: Vector2f::new(178., 768.),
-                    neighbour_side: -1,
-                    neighbour_sect: -1
-                },
-                Side {
-                    p1: Vector2f::new(178., 768.),
                     p2: Vector2f::new(78., 768.),
                     neighbour_sect: -1,
                     neighbour_side: -1
                 },
                 Side {
                     p1: Vector2f::new(78., 768.),
+                    p2: Vector2f::new(178., 768.),
+                    neighbour_side: -1,
+                    neighbour_sect: -1
+                },
+                Side {
+                    p1: Vector2f::new(178., 768.),
+                    p2: Vector2f::new(178., 256.),
+                    neighbour_sect: -1,
+                    neighbour_side: -1
+                },
+                Side {
+                    p1: Vector2f::new(178., 256.),
                     p2: Vector2f::new(78., 256.),
                     neighbour_side: -1,
                     neighbour_sect: -1
@@ -114,7 +114,7 @@ fn main() {
 
     loop {
         let delta_time = clock.restart().as_seconds();
-        println!("{} FPS", 1. / delta_time);
+        // println!("{} FPS", 1. / delta_time);
 
         while let Some(event) = window.poll_event() {
             match event {

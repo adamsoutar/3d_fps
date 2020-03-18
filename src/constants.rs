@@ -16,4 +16,4 @@ pub const HEIGHT: u32 = 1080;
 pub const XFOV: f32 = 0.75 * WIDTH as f32;
 pub const YFOV: f32 = 0.9 * HEIGHT as f32;
 
-pub const MAX_PORTAL_DRAWS: usize = 1000;
+pub const MAX_PORTAL_DRAWS: usize = 2;

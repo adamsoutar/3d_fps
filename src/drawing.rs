@@ -1,49 +1,23 @@
 use sfml::graphics::*;
 use sfml::system::*;
+use std::cmp::{min, max};
 
 use crate::vector_utils::*;
 use crate::constants::*;
 use crate::map::*;
+use std::io::Lines;
 
 pub fn draw_3d_map (window: &mut RenderWindow, map: &Vec<Sector>, player: &Thing) {
-    // Traverse sectors, then draw them backwards "on top of each other"
-    // to create see-through-able portals
-
-    let mut portal_stack: Vec<usize> = vec![];
-    portal_stack.push(player.sector);
-
-    // What else can we see?
-    process_portals(player.sector, map, player.sector, &mut portal_stack);
-
-    for _ in 0..portal_stack.len() {
-        draw_sector(window, map, portal_stack.pop().unwrap(), player);
-    }
+    let w = WIDTH as i64 / 2;
+    let h = HEIGHT as i64 / 2;
+    draw_sector(window, map, player.sector, player, -w, w, -h, h, 0);
 }
 
-fn process_portals (sect_id: usize, map: &Vec<Sector>, came_from: usize, stack: &mut Vec<usize>) {
-    // TODO: Don't look at portals that are behind us
-
-    let sect = &map[sect_id];
-    for side in &sect.sides {
-        if side.neighbour_sect != -1 {
-            if stack.len() >= MAX_PORTAL_DRAWS {
-                return;
-            }
-            let nu = side.neighbour_sect as usize;
-
-            // Don't go back in infinite recursion
-            // TODO: Make this "don't go back over the side you just came from"
-            if nu == came_from {
-                continue;
-            }
-
-            stack.push(nu);
-            process_portals(nu, map, sect_id, stack);
-        }
+fn draw_sector (window: &mut RenderWindow, map: &Vec<Sector>, sect_id: usize, player: &Thing, sx: i64, ex: i64, sy: i64, ey: i64, recursion: usize) {
+    if recursion >= MAX_PORTAL_DRAWS {
+        return;
     }
-}
 
-fn draw_sector (window: &mut RenderWindow, map: &Vec<Sector>, sect_id: usize, player: &Thing) {
     let sect = &map[sect_id];
     for side in &sect.sides {
         let mut p1 = side.p1.clone();
@@ -53,11 +27,19 @@ fn draw_sector (window: &mut RenderWindow, map: &Vec<Sector>, sect_id: usize, pl
         p1 = rotate_vec(p1 - player.pos, -player.rot);
         p2 = rotate_vec(p2 - player.pos, -player.rot);
 
-        draw_wall(window, &p1, &p2, map, sect_id, side, player);
+        draw_wall(window, &p1, &p2, map, sect_id, side, player, sx, ex, sy, ey, recursion);
     }
 }
 
-fn draw_wall (window: &mut RenderWindow, px1: &Vector2f, px2: &Vector2f, map: &Vec<Sector>, sect_id: usize, side: &Side, player: &Thing) {
+fn draw_wall (
+    window: &mut RenderWindow,
+    px1: &Vector2f, px2: &Vector2f,
+    map: &Vec<Sector>, sect_id: usize,
+    side: &Side, player: &Thing,
+    startx: i64, endx: i64,
+    starty: i64, endy: i64,
+    recursion: usize
+) {
     let mut p1 = px1.clone();
     let mut p2 = px2.clone();
     let sect = &map[sect_id];
@@ -68,12 +50,12 @@ fn draw_wall (window: &mut RenderWindow, px1: &Vector2f, px2: &Vector2f, map: &V
             p1,
             p2,
             Vector2f::new(0., 0.),
-            Vector2f::new(-1., 0.00001));
+            Vector2f::new(-1., 0.1));
         let i2 = line_intersect(
             p1,
             p2,
             Vector2f::new(0., 0.),
-            Vector2f::new(1., 0.00001));
+            Vector2f::new(1., 0.1));
         if p1.y <= 0. {
             if i1.y > 0. {
                 p1 = i1
@@ -114,9 +96,9 @@ fn draw_wall (window: &mut RenderWindow, px1: &Vector2f, px2: &Vector2f, map: &V
         let floor_right = Vector2f::new(bottom_right.x, bottom_right.y - to_top);
 
         // Ceiling
-        draw_quad(window, ceil_left, ceil_right, top_right, top_left, Color::rgb(34, 34, 34));
+        draw_quad(window, ceil_left, ceil_right, top_right, top_left, Color::rgb(34, 34, 34), startx, endx, starty, endy);
         // Floor
-        draw_quad(window, bottom_left, bottom_right, floor_right, floor_left, Color::rgb(0, 10, 170));
+        draw_quad(window, bottom_left, bottom_right, floor_right, floor_left, Color::rgb(0, 10, 170), startx, endx, starty, endy);
 
         // Don't draw walls over portals
         if side.neighbour_sect != -1 {
@@ -131,7 +113,7 @@ fn draw_wall (window: &mut RenderWindow, px1: &Vector2f, px2: &Vector2f, map: &V
                 let t_r = raw_screen_pos(Vector3f::new(p2.x, p2.y, sect.ceil_height), player);
                 let b_r = raw_screen_pos(Vector3f::new(p2.x, p2.y, sect.ceil_height - c_diff), player);
                 let b_l = raw_screen_pos(Vector3f::new(p1.x, p1.y, sect.ceil_height - c_diff), player);
-                draw_quad(window, t_l, t_r, b_r, b_l, Color::rgb(132, 24, 216));
+                draw_quad(window, t_l, t_r, b_r, b_l, Color::rgb(132, 24, 216), startx, endx, starty, endy);
             }
 
             if f_diff > 0. {
@@ -140,15 +122,18 @@ fn draw_wall (window: &mut RenderWindow, px1: &Vector2f, px2: &Vector2f, map: &V
                 let t_r = raw_screen_pos(Vector3f::new(p2.x, p2.y, sect.floor_height + f_diff), player);
                 let b_r = raw_screen_pos(Vector3f::new(p2.x, p2.y, sect.floor_height), player);
                 let b_l = raw_screen_pos(Vector3f::new(p1.x, p1.y, sect.floor_height), player);
-                draw_quad(window, t_l, t_r, b_r, b_l, Color::rgb(132, 24, 216));
+                draw_quad(window, t_l, t_r, b_r, b_l, Color::rgb(132, 24, 216), startx, endx, starty, endy);
             }
 
-            // TODO: Portal mids here
+            // Draw portal in the mid
+            // TODO: Can have a texture over a portal hole?
+
+            draw_sector(window, map, side.neighbour_sect as usize, player, startx, endx, starty, endy, recursion + 1);
             return;
         }
 
         // Wall
-        draw_quad(window, top_left, top_right, bottom_right, bottom_left, Color::rgb(170, 170, 170));
+        draw_quad(window, top_left, top_right, bottom_right, bottom_left, Color::rgb(170, 170, 170), startx, endx, starty, endy);
     }
 }
 
@@ -166,8 +151,40 @@ fn world_to_screen_pos (v: Vector3f, player: &Thing) -> Vector2f {
     Vector2::new(x, y)
 }
 
-pub fn draw_quad (window: &mut RenderWindow, top_left: Vector2f, top_right: Vector2f, bottom_right: Vector2f, bottom_left: Vector2f, colour: Color) {
-    let mut vertex_array = VertexArray::default();
+pub fn vline (window: &mut RenderWindow, x: f32, startY: f32, endY: f32, colour: Color) {
+    let mut va = VertexArray::default();
+    va.set_primitive_type(PrimitiveType::Lines);
+    va.append(&Vertex::with_pos_color(sfml_vec(Vector2f::new(x, startY)), colour));
+    va.append(&Vertex::with_pos_color(sfml_vec(Vector2f::new(x, endY)), colour));
+    window.draw(&va);
+}
+
+pub fn draw_quad (
+    window: &mut RenderWindow,
+    top_left: Vector2f, top_right: Vector2f,
+    bottom_right: Vector2f, bottom_left: Vector2f,
+    colour: Color,
+    startx: i64, endx: i64,
+    starty: i64, endy: i64
+) {
+    let x1 = top_left.x;
+    let x2 = top_right.x;
+    let y1a = top_left.y;
+    let y1b = bottom_left.y;
+    let y2a = top_right.y;
+    let y2b = bottom_right.y;
+    let begin = max(x1 as i64, startx);
+    let end = min(x2 as i64, endx);
+    for x in begin..=end {
+        let fx = x as f32;
+        let ya = (fx - x1) * (y2a - y1a) / (x2 - x1) + y1a;
+        let yb = (fx - x1) * (y2b - y1b) / (x2 - x1) + y1b;
+        let cya = clamp(ya, starty as f32, endy as f32);
+        let cyb = clamp(yb, starty as f32, endy as f32);
+        vline(window, fx, cya, cyb, colour);
+    }
+
+    /*let mut vertex_array = VertexArray::default();
     vertex_array.set_primitive_type(PrimitiveType::TriangleStrip);
 
     let tl = sfml_vec(top_left);
@@ -181,5 +198,11 @@ pub fn draw_quad (window: &mut RenderWindow, top_left: Vector2f, top_right: Vect
     vertex_array.append(&Vertex::with_pos_color(tr, colour));
     vertex_array.append(&Vertex::with_pos_color(br, colour));
 
-    window.draw(&vertex_array);
+    window.draw(&vertex_array);*/
+}
+
+fn clamp (v: f32, x: f32, y: f32) -> f32 {
+    if v > y { return y }
+    if v < x { return x }
+    v
 }
