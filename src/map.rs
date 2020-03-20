@@ -9,8 +9,7 @@ pub struct Sector {
 pub struct Side {
     pub p1: Vector2f,
     pub p2: Vector2f,
-    pub neighbour_sect: i32,
-    pub neighbour_side: i32
+    pub neighbour: i32
 }
 
 pub struct Thing {

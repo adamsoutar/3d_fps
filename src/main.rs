@@ -28,39 +28,33 @@ fn main() {
                 Side {
                     p1: Vector2f::new(-256., 256.),
                     p2: Vector2f::new(78., 256.),
-                    neighbour_sect: -1,
-                    neighbour_side: -1
+                    neighbour: -1
                 },
                 Side {
                     p1: Vector2f::new(78., 256.),
                     p2: Vector2f::new(178., 256.),
                     // This line is the portal to the corridor.
-                    neighbour_sect: 1,
-                    neighbour_side: 0
+                    neighbour: 1
                 },
                 Side {
                     p1: Vector2f::new(178., 256.),
                     p2: Vector2f::new(256., 256.),
-                    neighbour_sect: -1,
-                    neighbour_side: -1
+                    neighbour: -1
                 },
                 Side {
                     p1: Vector2f::new(256., 256.),
                     p2: Vector2f::new(256., -256.),
-                    neighbour_sect: -1,
-                    neighbour_side: -1
+                    neighbour: -1
                 },
                 Side {
                     p1: Vector2f::new(256., -256.),
                     p2: Vector2f::new(-256., -256.),
-                    neighbour_sect: -1,
-                    neighbour_side: -1
+                    neighbour: -1
                 },
                 Side {
                     p1: Vector2f::new(-256., -256.),
                     p2: Vector2f::new(-256., 256.),
-                    neighbour_sect: -1,
-                    neighbour_side: -1
+                    neighbour: -1
                 }
             ],
             ceil_height: 128.,
@@ -72,30 +66,63 @@ fn main() {
                 Side {
                     p1: Vector2f::new(78., 256.),
                     p2: Vector2f::new(78., 768.),
-                    neighbour_sect: -1,
-                    neighbour_side: -1
+                    neighbour: -1
                 },
                 Side {
                     p1: Vector2f::new(78., 768.),
                     p2: Vector2f::new(178., 768.),
-                    neighbour_side: -1,
-                    neighbour_sect: -1
+                    neighbour: 2
                 },
                 Side {
                     p1: Vector2f::new(178., 768.),
                     p2: Vector2f::new(178., 256.),
-                    neighbour_sect: -1,
-                    neighbour_side: -1
+                    neighbour: -1
                 },
                 Side {
                     p1: Vector2f::new(178., 256.),
                     p2: Vector2f::new(78., 256.),
-                    neighbour_side: 1,
-                    neighbour_sect: 0
+                    neighbour: 0
                 }
             ],
             floor_height: 16.,
             ceil_height: 100.
+        },
+        // The other room
+        Sector {
+            sides: vec![
+                Side {
+                    p1: Vector2f::new(78., 768.),
+                    p2: Vector2f::new(0., 768.),
+                    neighbour: -1
+                },
+                Side {
+                    p1: Vector2f::new(0., 768.),
+                    p2: Vector2f::new(0., 1024.),
+                    neighbour: -1
+                },
+                Side {
+                    p1: Vector2f::new(0., 1024.),
+                    p2: Vector2f::new(512., 1024.),
+                    neighbour: -1
+                },
+                Side {
+                    p1: Vector2f::new(512., 1024.),
+                    p2: Vector2f::new(512., 768.),
+                    neighbour: -1
+                },
+                Side {
+                    p1: Vector2f::new(512., 768.),
+                    p2: Vector2f::new(178., 768.),
+                    neighbour: -1
+                },
+                Side {
+                    p1: Vector2f::new(178., 768.),
+                    p2: Vector2f::new(78., 768.),
+                    neighbour: 1
+                }
+            ],
+            floor_height: -200.,
+            ceil_height: 80.
         }
     ];
 
@@ -173,14 +200,14 @@ fn process_movement (player: &mut Thing, map: &Vec<Sector>) {
         // We'll cross the wall if we move
         let lsi = segment_intersection(&side.p1, &side.p2, &player.pos, &next_frame);
         if lsi == SegmentIntersection::Intersection {
-            if side.neighbour_sect == -1 {
+            if side.neighbour == -1 {
                 // TODO: Vector projection
                 player.velocity = Vector2f::new(0., 0.);
                 continue;
             }
 
             // It's a portal, so we might be moving sectors
-            let nu = side.neighbour_sect as usize;
+            let nu = side.neighbour as usize;
             let ns = &map[nu];
             let step = ns.floor_height - sect.floor_height;
 

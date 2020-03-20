@@ -53,6 +53,7 @@ fn draw_screen (window: &mut RenderWindow, cutoffs: &mut Vec<Cutoffs>, map: &Vec
     let floor_colour = Color::rgb(0, 10, 170);
     let wall_colour = Color::rgb(170, 170, 170);
     let upper_lower_colour = Color::rgb(132, 24, 216);
+    let edge_colour = Color::rgb(0, 0, 0);
 
     while render_queue.len() > 0 {
         let now = render_queue.pop().unwrap();
@@ -107,8 +108,8 @@ fn draw_screen (window: &mut RenderWindow, cutoffs: &mut Vec<Cutoffs>, map: &Vec
             // If this is a portal, get these for upper & lower calculations
             let mut nyceil = 0.;
             let mut nyfloor = 0.;
-            if side.neighbour_sect != -1 {
-                let nsct = &map[side.neighbour_sect as usize];
+            if side.neighbour != -1 {
+                let nsct = &map[side.neighbour as usize];
                 nyceil = nsct.ceil_height - player.zpos;
                 nyfloor = nsct.floor_height - player.zpos;
             }
@@ -125,6 +126,10 @@ fn draw_screen (window: &mut RenderWindow, cutoffs: &mut Vec<Cutoffs>, map: &Vec
 
             for x in beginx..=endx {
                 let mut ctoff = &mut cutoffs[(x + WIDTH as i64 / 2) as usize];
+                let mut col = wall_colour;
+                if x == beginx || x == endx {
+                    col = edge_colour
+                }
 
                 let ya = (x - x1) * (y2a - y1a) / (x2 - x1) + y1a;
                 let yb = (x - x1) * (y2b - y1b) / (x2 - x1) + y1b;
@@ -136,7 +141,7 @@ fn draw_screen (window: &mut RenderWindow, cutoffs: &mut Vec<Cutoffs>, map: &Vec
                 // Render floor
                 if DRAW_FLOORS { vline(window, x, cyb + 1, ctoff.bottom, floor_colour) }
 
-                if side.neighbour_sect != -1 {
+                if side.neighbour != -1 {
                     // We potentially have uppers/lowers
                     let nya = (x - x1) * (ny2a - ny1a) / (x2 - x1) + ny1a;
                     let nyb = (x - x1) * (ny2b - ny1b) / (x2 - x1) + ny1b;
@@ -157,12 +162,12 @@ fn draw_screen (window: &mut RenderWindow, cutoffs: &mut Vec<Cutoffs>, map: &Vec
                 }
 
                 // Render wall
-                if DRAW_WALLS { vline(window, x, cya, cyb, wall_colour) }
+                if DRAW_WALLS { vline(window, x, cya, cyb, col) }
             }
 
-            if side.neighbour_sect != -1 && endx >= beginx {
+            if side.neighbour != -1 && endx >= beginx {
                 render_queue.push(RenderQueueItem {
-                    sector_id: side.neighbour_sect as usize,
+                    sector_id: side.neighbour as usize,
                     c_left: beginx,
                     c_right: endx
                 })
