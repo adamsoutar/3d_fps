@@ -16,4 +16,9 @@ pub const HEIGHT: u32 = 1080;
 pub const XFOV: f32 = 0.75 * WIDTH as f32;
 pub const YFOV: f32 = 0.9 * HEIGHT as f32;
 
-pub const MAX_PORTAL_DRAWS: usize = 2;
+pub const MAX_SECTOR_DRAWS: usize = 1;
+
+// Debug only, no reason to mess with these in game:
+pub const DRAW_CEILINGS: bool = true;
+pub const DRAW_WALLS: bool = true;
+pub const DRAW_FLOORS: bool = true;
