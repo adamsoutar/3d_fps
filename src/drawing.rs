@@ -26,6 +26,18 @@ pub fn draw_3d_map (window: &mut RenderWindow, map: &Vec<Sector>, player: &Thing
     }
 
     draw_sector(window, map, player.sector, player, -w, w, &mut offs, 0);
+
+    draw_cutoffs(window, &offs);
+}
+
+fn draw_cutoffs (window: &mut RenderWindow, cutoffs: &Vec<Cutoffs>) {
+    let w = WIDTH as f32 / 2.;
+    for i in 0..WIDTH {
+        let c = &cutoffs[i as usize];
+
+        let pos = i as f32 - w;
+        vline(window, pos, c.top as f32, c.bottom as f32, Color::RED);
+    }
 }
 
 fn draw_sector (window: &mut RenderWindow, map: &Vec<Sector>, sect_id: usize, player: &Thing, clip_left: f32, clip_right: f32, cutoffs: &mut Vec<Cutoffs>, recursion: usize) {
@@ -156,6 +168,7 @@ fn draw_wall (
             // Draw portal in the mid
             // TODO: Can have a texture over a portal hole?
             draw_sector(window, map, side.neighbour_sect as usize, player, top_left.x, top_right.x, cutoffs, recursion + 1);
+            // draw_quad(window, p_tl, p_tr, p_br, p_bl, Color::GREEN, clip_left, clip_right, cutoffs);
             return;
         }
 
@@ -174,12 +187,14 @@ fn fill_quad_cutoffs (top_left: Vector2f, top_right: Vector2f, bottom_right: Vec
     let y2a = top_right.y;
     let y2b = bottom_right.y;
 
-    let mut sx = x1 as i64 + w;
-    let mut ex = x2 as i64 + w;
-    sx = clamp(sx, 0, WIDTH as i64 - 1);
-    ex = clamp(ex, 0, WIDTH as i64 - 1);
+    let startx = top_left.x as i64;
+    let endx = top_right.x as i64;
+    let mut begin = max(x1 as i64, startx);
+    let mut end = min(x2 as i64, endx);
+    begin = clamp(begin, -w, w - 1);
+    end = clamp(end, -w, w - 1);
 
-    for i in sx..=ex {
+    for i in begin..=end {
         let fi = i as f32;
         let ya = (fi - x1) * (y2a - y1a) / (x2 - x1) + y1a;
         let yb = (fi - x1) * (y2b - y1b) / (x2 - x1) + y1b;
