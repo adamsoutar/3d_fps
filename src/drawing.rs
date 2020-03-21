@@ -5,7 +5,6 @@ use std::cmp::{min, max, PartialOrd};
 use crate::vector_utils::*;
 use crate::constants::*;
 use crate::map::*;
-use std::io::Lines;
 
 pub struct Cutoffs {
     top: i64,
@@ -179,16 +178,6 @@ fn draw_screen (window: &mut RenderWindow, cutoffs: &mut Vec<Cutoffs>, map: &Vec
         if drawn.len() >= MAX_SECTOR_DRAWS {
             return;
         }
-    }
-}
-
-fn draw_cutoffs (window: &mut RenderWindow, cutoffs: &Vec<Cutoffs>) {
-    let w = WIDTH / 2;
-    for i in 0..WIDTH {
-        let c = &cutoffs[i as usize];
-
-        let pos = i - w;
-        vline(window, pos as i64, c.top, c.bottom, Color::RED);
     }
 }
 

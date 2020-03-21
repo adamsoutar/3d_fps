@@ -192,6 +192,7 @@ fn process_movement (player: &mut Thing, map: &Vec<Sector>) {
 
     /* COLLISION DETECTION */
     // TODO: Could probably be a function on its own
+    // NOTE: Can be used to clip out of the map by sliding on a wall
     let sect = &map[player.sector];
     let next_frame = player.pos + player.velocity;
     for s in 0..sect.sides.len() {
@@ -201,8 +202,7 @@ fn process_movement (player: &mut Thing, map: &Vec<Sector>) {
         let lsi = segment_intersection(&side.p1, &side.p2, &player.pos, &next_frame);
         if lsi == SegmentIntersection::Intersection {
             if side.neighbour == -1 {
-                // TODO: Vector projection
-                player.velocity = Vector2f::new(0., 0.);
+                player.velocity = vector_projection(player.velocity, side.p2 - side.p1);
                 continue;
             }
 
@@ -213,8 +213,7 @@ fn process_movement (player: &mut Thing, map: &Vec<Sector>) {
 
             // We can't step that high
             if step > PLAYER_MAX_STEP_HEIGHT {
-                // TODO: Vector projection
-                player.velocity = Vector2f::new(0., 0.);
+                player.velocity = vector_projection(player.velocity, side.p2 - side.p1);
                 continue;
             }
 

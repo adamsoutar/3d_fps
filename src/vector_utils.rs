@@ -13,6 +13,22 @@ pub fn line_intersect (v1: Vector2f, v2: Vector2f, v3: Vector2f, v4: Vector2f) -
 pub fn cross_product (v1: Vector2f, v2: Vector2f) -> f32 {
     v1.x * v2.y - v1.y * v2.x
 }
+pub fn dot_product (v1: Vector2f, v2: Vector2f) -> f32 {
+    v1.x * v2.x + v1.y * v2.y
+}
+
+// Gives cos of the angle between two vectors
+pub fn cos_theta (v1: Vector2f, v2: Vector2f) -> f32 {
+    dot_product(v1, v2) / (mag(&v1) * mag(&v2))
+}
+
+pub fn unit_vector (v: Vector2f) -> Vector2f {
+    1. / mag(&v) * v
+}
+
+pub fn vector_projection (v1: Vector2f, v2: Vector2f) -> Vector2f {
+    mag(&v1) * cos_theta(v1, v2) * unit_vector(v2)
+}
 
 pub fn sfml_vec (v: Vector2f) -> Vector2f {
     let center = Vector2f::new(WIDTH as f32 / 2., HEIGHT as f32 / 2.);
@@ -37,7 +53,7 @@ pub fn point_side (px1: &Vector2f, px2: &Vector2f, px: &Vector2f) -> f32 {
     cross_product(p2 - p1, p - p1)
 }
 
-pub fn vector_magnitude (v: &Vector2f) -> f32 {
+pub fn mag (v: &Vector2f) -> f32 {
     (v.x * v.x + v.y * v.y).sqrt()
 }
 
