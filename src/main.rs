@@ -190,39 +190,8 @@ fn process_movement (player: &mut Thing, map: &Vec<Sector>) {
     // Apply friction
     player.velocity *= FRICTION;
 
-    /* COLLISION DETECTION */
-    // TODO: Could probably be a function on its own
-    // NOTE: Can be used to clip out of the map by sliding on a wall
     let sect = &map[player.sector];
-    let next_frame = player.pos + player.velocity;
-    for s in 0..sect.sides.len() {
-        let side = &sect.sides[s];
-
-        // We'll cross the wall if we move
-        let lsi = segment_intersection(&side.p1, &side.p2, &player.pos, &next_frame);
-        if lsi == SegmentIntersection::Intersection {
-            if side.neighbour == -1 {
-                player.velocity = vector_projection(player.velocity, side.p2 - side.p1);
-                continue;
-            }
-
-            // It's a portal, so we might be moving sectors
-            let nu = side.neighbour as usize;
-            let ns = &map[nu];
-            let step = ns.floor_height - sect.floor_height;
-
-            // We can't step that high
-            if step > PLAYER_MAX_STEP_HEIGHT {
-                player.velocity = vector_projection(player.velocity, side.p2 - side.p1);
-                continue;
-            }
-
-            // We're moving to that sector!
-            player.sector = nu;
-            if step < 0. { player.falling = true }
-        }
-    }
-    /* END COLLISION DETECTION */
+    collision_detection(&sect, map, player);
 
     // Gravity
     if player.falling {
@@ -251,3 +220,36 @@ fn process_movement (player: &mut Thing, map: &Vec<Sector>) {
     player.rot += rt;
 }
 
+fn collision_detection (sect: &Sector, map: &Vec<Sector>, player: &mut Thing) {
+    let next_frame = player.pos + player.velocity;
+    for s in 0..sect.sides.len() {
+        let side = &sect.sides[s];
+
+        // We'll cross the wall if we move
+        let lsi = segment_intersection(&side.p1, &side.p2, &player.pos, &next_frame);
+        if lsi == SegmentIntersection::Intersection {
+            if side.neighbour == -1 {
+                // Slide along the wall and rerun collision detection
+                player.velocity = vector_projection(player.velocity, side.p2 - side.p1);
+                collision_detection(sect, map, player);
+                return;
+            }
+
+            // It's a portal, so we might be moving sectors
+            let nu = side.neighbour as usize;
+            let ns = &map[nu];
+            let step = ns.floor_height - sect.floor_height;
+
+            // We can't step that high
+            if step > PLAYER_MAX_STEP_HEIGHT {
+                player.velocity = vector_projection(player.velocity, side.p2 - side.p1);
+                collision_detection(sect, map, player);
+                return;
+            }
+
+            // We're moving to that sector!
+            player.sector = nu;
+            if step < 0. { player.falling = true }
+        }
+    }
+}
