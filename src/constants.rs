@@ -18,6 +18,10 @@ pub const YFOV: f32 = 0.9 * HEIGHT as f32;
 
 pub const MAX_SECTOR_DRAWS: usize = 100;
 
+pub const X_MOUSE_SENSITIVITY: f32 = 0.0005;
+// Unused until YAW implemented
+pub const Y_MOUSE_SENSITIVITY: f32 = 1.;
+
 // Debug only, no reason to mess with these in game:
 pub const DRAW_CEILINGS: bool = true;
 pub const DRAW_WALLS: bool = true;

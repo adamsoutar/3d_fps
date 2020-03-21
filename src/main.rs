@@ -19,6 +19,8 @@ fn main() {
         &Default::default(),
     );
     window.set_vertical_sync_enabled(false);
+    window.set_mouse_cursor_visible(false);
+    // window.set_framerate_limit(60);
 
     // TODO (SOON): Load maps from files
     let map: Vec<Sector> = vec![
@@ -149,6 +151,12 @@ fn main() {
         })
     }
 
+    // Prepare for delta measurement
+    let h32 = HEIGHT as i32 / 2;
+    let w32 = WIDTH as i32 / 2;
+    let center = Vector2i::new(w32, h32);
+    center_mouse(&mut window);
+
     loop {
         let delta_time = clock.restart().as_seconds();
         println!("{} FPS", 1. / delta_time);
@@ -159,6 +167,11 @@ fn main() {
                 _ => {}
             }
         }
+
+        // Mouselook
+        let delta_mouse = window.mouse_position() - center;
+        mouselook(delta_mouse, &mut player);
+        center_mouse(&mut window);
 
         accum += delta_time;
         if accum > PHYSICS_TIMESTEP {
@@ -268,4 +281,15 @@ fn collision_detection (sect: &Sector, map: &Vec<Sector>, player: &mut Thing) {
             if step < 0. { player.falling = true }
         }
     }
+}
+
+fn center_mouse (window: &mut RenderWindow) {
+    let h = HEIGHT as i32 / 2;
+    let w = WIDTH as i32 / 2;
+    window.set_mouse_position(&Vector2i::new(w, h));
+}
+
+fn mouselook (v: Vector2i, player: &mut Thing) {
+    let mx = v.x as f32 * X_MOUSE_SENSITIVITY;
+    player.rot += mx;
 }
