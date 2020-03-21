@@ -139,9 +139,19 @@ fn main() {
     let mut clock = Clock::start();
     let mut accum = 0.;
 
+    // Prepare this each frame
+    let mut offs: Vec<Cutoffs> = vec![];
+    let h = HEIGHT as i64 / 2;
+    for _ in 0..WIDTH {
+        offs.push(Cutoffs {
+            top: h,
+            bottom: -h
+        })
+    }
+
     loop {
         let delta_time = clock.restart().as_seconds();
-        // println!("{} FPS", 1. / delta_time);
+        println!("{} FPS", 1. / delta_time);
 
         while let Some(event) = window.poll_event() {
             match event {
@@ -157,8 +167,14 @@ fn main() {
             process_movement(&mut player, &map);
         }
 
+        // Prepare for render
+        for i in 0..WIDTH as usize {
+            offs[i].top = h;
+            offs[i].bottom = -h;
+        }
+
         window.clear(&Color::BLACK);
-        draw_3d_map(&mut window, &map, &player);
+        draw_3d_map(&mut window, &map, &player, &mut offs);
         // draw_map(&mut window, &t_map, &player);
         window.display();
     }

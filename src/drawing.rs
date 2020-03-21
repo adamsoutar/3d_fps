@@ -7,8 +7,8 @@ use crate::constants::*;
 use crate::map::*;
 
 pub struct Cutoffs {
-    top: i64,
-    bottom: i64
+    pub top: i64,
+    pub bottom: i64
 }
 
 struct RenderQueueItem {
@@ -17,20 +17,8 @@ struct RenderQueueItem {
     c_right: i64
 }
 
-pub fn draw_3d_map (window: &mut RenderWindow, map: &Vec<Sector>, player: &Thing) {
-    let w = WIDTH as i64 / 2;
-    let h = HEIGHT as i64 / 2;
-
-    // TODO: Keep this in main and don't redeclare it every frame
-    let mut offs: Vec<Cutoffs> = vec![];
-    for _ in 0..WIDTH {
-        offs.push(Cutoffs {
-            top: h,
-            bottom: -h
-        })
-    }
-
-    draw_screen(window, &mut offs, map, player);
+pub fn draw_3d_map (window: &mut RenderWindow, map: &Vec<Sector>, player: &Thing, cutoffs: &mut Vec<Cutoffs>) {
+    draw_screen(window, cutoffs, map, player);
 }
 
 fn draw_screen (window: &mut RenderWindow, cutoffs: &mut Vec<Cutoffs>, map: &Vec<Sector>, player: &Thing) {
