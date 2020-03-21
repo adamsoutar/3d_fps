@@ -14,7 +14,7 @@ use map::*;
 fn main() {
     let mut window = RenderWindow::new(
         (WIDTH, HEIGHT),
-        "3d-fps",
+        "3d_fps",
         Style::CLOSE,
         &Default::default(),
     );
