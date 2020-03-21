@@ -219,6 +219,11 @@ fn process_movement (player: &mut Thing, map: &Vec<Sector>) {
     // Apply friction
     player.velocity *= FRICTION;
 
+    if mag(&player.velocity) > PLAYER_SPEED_CAP {
+        // Speed cap the player
+        player.velocity = PLAYER_SPEED_CAP * unit_vector(player.velocity);
+    }
+
     let sect = &map[player.sector];
     collision_detection(&sect, map, player);
 

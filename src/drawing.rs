@@ -169,13 +169,7 @@ fn draw_screen (window: &mut RenderWindow, cutoffs: &mut Vec<Cutoffs>, map: &Vec
     }
 }
 
-fn raw_screen_pos (v: Vector3f, player: &Thing) -> Vector2f {
-    let p = Vector2f::new(v.x, v.y);
-    let x = p.x * XFOV / p.y;
-    let y = (v.z - player.zpos) * YFOV / p.y;
-    Vector2::new(x, y)
-}
-
+// Perhaps useful for medpacks, players, other sprites etc.
 fn world_to_screen_pos (v: Vector3f, player: &Thing) -> Vector2f {
     let p = rotate_vec(Vector2f::new(v.x, v.y) - player.pos, -player.rot);
     let x = p.x * XFOV / p.y;
