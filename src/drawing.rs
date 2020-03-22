@@ -42,6 +42,10 @@ fn draw_screen (window: &mut RenderWindow, cutoffs: &mut Vec<Cutoffs>, map: &Vec
     let upper_lower_colour = Color::rgb(132, 24, 216);
     let edge_colour = Color::rgb(0, 0, 0);
 
+    let yaw = |y, z| {
+        y + z * player.yaw
+    };
+
     while render_queue.len() > 0 {
         let now = render_queue.pop().unwrap();
 
@@ -80,17 +84,19 @@ fn draw_screen (window: &mut RenderWindow, cutoffs: &mut Vec<Cutoffs>, map: &Vec
             let yfloor = sect.floor_height - player.zpos;
 
             // Perspective calculations
-            let z1 = yfloor * YFOV;
-            let z2 = yceil * YFOV;
             let x1 = (p1.x * XFOV / p1.y) as i64;
             let x2 = (p2.x * XFOV / p2.y) as i64;
-            let y1a = (z2 / p1.y) as i64;
-            let y1b = (z1 / p1.y) as i64;
-            let y2a = (z2 / p2.y) as i64;
-            let y2b = (z1 / p2.y) as i64;
 
             // The cutoff renders this invisible
             if x1 >= x2 || x2 < now.c_left || x1 > now.c_right { continue }
+
+            let yscale1 = YFOV / p1.y;
+            let yscale2 = YFOV / p2.y;
+            let y1a = (yaw(yceil, p1.y) * yscale1) as i64;
+            let y1b = (yaw(yfloor, p1.y) * yscale1) as i64;
+            let y2a = (yaw(yceil, p2.y) * yscale2) as i64;
+            let y2b = (yaw(yfloor, p2.y) * yscale2) as i64;
+
 
             // If this is a portal, get these for upper & lower calculations
             let mut nyceil = 0.;
@@ -101,12 +107,10 @@ fn draw_screen (window: &mut RenderWindow, cutoffs: &mut Vec<Cutoffs>, map: &Vec
                 nyfloor = nsct.floor_height - player.zpos;
             }
 
-            let nz1 = nyfloor * YFOV;
-            let nz2 = nyceil * YFOV;
-            let ny1a = (nz2 / p1.y) as i64;
-            let ny1b = (nz1 / p1.y) as i64;
-            let ny2a = (nz2 / p2.y) as i64;
-            let ny2b = (nz1 / p2.y) as i64;
+            let ny1a = (yaw(nyceil, p1.y) * yscale1) as i64;
+            let ny1b = (yaw(nyfloor, p1.y) * yscale1) as i64;
+            let ny2a = (yaw(nyceil, p2.y) * yscale2) as i64;
+            let ny2b = (yaw(nyfloor, p2.y) * yscale2) as i64;
 
             let beginx = max(x1, now.c_left);
             let endx = min(x2, now.c_right);

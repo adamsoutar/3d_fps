@@ -12,6 +12,8 @@ pub struct Side {
     pub neighbour: i32
 }
 
+// TODO: Do Thing as a trait
+//       with inheriting structs like LocalPlayer, NetPlayer
 pub struct Thing {
     pub pos: Vector2f, // Position
     pub zpos: f32,     // Gravity-affected vert. position
@@ -19,5 +21,6 @@ pub struct Thing {
     pub fall_velocity: f32,
     pub velocity: Vector2f,
     pub rot: f32,      // Rotation
-    pub sector: usize  // Sector in which the object resides
+    pub sector: usize,  // Sector in which the object resides
+    pub yaw: f32 // Vertical look
 }

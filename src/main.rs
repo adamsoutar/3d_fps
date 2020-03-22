@@ -10,6 +10,8 @@ mod constants;
 use constants::*;
 mod map;
 use map::*;
+mod game_logic;
+use game_logic::*;
 
 fn main() {
     let mut window = RenderWindow::new(
@@ -135,7 +137,8 @@ fn main() {
         fall_velocity: 0.,
         velocity: Vector2f::new(0.,0.),
         rot: 0.,
-        sector: 0
+        sector: 0,
+        yaw: 0.
     };
 
     let mut clock = Clock::start();
@@ -159,7 +162,7 @@ fn main() {
 
     loop {
         let delta_time = clock.restart().as_seconds();
-        println!("{} FPS", 1. / delta_time);
+        // println!("{} FPS", 1. / delta_time);
 
         while let Some(event) = window.poll_event() {
             match event {
@@ -296,5 +299,9 @@ fn center_mouse (window: &mut RenderWindow) {
 
 fn mouselook (v: Vector2i, player: &mut Thing) {
     let mx = v.x as f32 * X_MOUSE_SENSITIVITY;
+    let my = v.y as f32 * Y_MOUSE_SENSITIVITY;
     player.rot += mx;
+    player.yaw += my;
+    if player.yaw > MAX_YAW { player.yaw = MAX_YAW }
+    if player.yaw < -MAX_YAW { player.yaw = -MAX_YAW }
 }
