@@ -298,8 +298,11 @@ fn center_mouse (window: &mut RenderWindow) {
 }
 
 fn mouselook (v: Vector2i, player: &mut Thing) {
-    let mx = v.x as f32 * X_MOUSE_SENSITIVITY;
-    let my = v.y as f32 * Y_MOUSE_SENSITIVITY;
+    let mut mx = v.x as f32 * X_MOUSE_SENSITIVITY;
+    let mut my = v.y as f32 * Y_MOUSE_SENSITIVITY;
+    if !ENABLE_HORIZONTAL_MOUSELOOK { mx = 0. }
+    if !ENABLE_VERTICAL_MOUSELOOK { my = 0. }
+
     player.rot += mx;
     player.yaw += my;
     if player.yaw > MAX_YAW { player.yaw = MAX_YAW }
