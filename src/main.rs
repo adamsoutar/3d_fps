@@ -264,7 +264,7 @@ fn collision_detection (sect: &Sector, map: &Vec<Sector>, player: &mut Thing) {
 
         // We'll cross the wall if we move
         let lsi = segment_intersection(&side.p1, &side.p2, &player.pos, &next_frame);
-        if lsi == SegmentIntersection::Intersection {
+        if lsi.kind == IntersectionKind::Intersection {
             if side.neighbour == -1 {
                 // Slide along the wall and rerun collision detection
                 player.velocity = vector_projection(player.velocity, side.p2 - side.p1);

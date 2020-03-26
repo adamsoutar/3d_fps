@@ -58,11 +58,15 @@ pub fn mag (v: &Vector2f) -> f32 {
 }
 
 #[derive(PartialEq)]
-pub enum SegmentIntersection {
+pub enum IntersectionKind {
     Collinear,
     Parallel,
     Intersection,
     None
+}
+pub struct SegmentIntersection {
+    pub kind: IntersectionKind,
+    pub intersection_point: Vector2f
 }
 
 // Determine the manner in which two line segments do or do not intersect
@@ -79,19 +83,37 @@ pub fn segment_intersection (p1: &Vector2f, p2: &Vector2f, p3: &Vector2f, p4: &V
     let m1 = cross_product(r, s);
     let m2 = cross_product(q - p, r);
 
+    let vz = Vector2f::new(0., 0.);
+    let ip = p + t * r;
+
     // Not sure if 0 checks are 100% accurate for f32 and cross_product
     if m1 == 0. && m2 == 0. {
-        return SegmentIntersection::Collinear;
+        return SegmentIntersection {
+            kind: IntersectionKind::Collinear,
+            // They don't intersect
+            intersection_point: vz
+        };
     }
 
     if m1 == 0. {
-        return SegmentIntersection::Parallel;
+        return SegmentIntersection {
+            kind: IntersectionKind::Parallel,
+            // They don't intersect
+            intersection_point: vz
+        };
     }
 
     // This is mainly what we're after
     if t >= 0. && t <= 1. && u >= 0. && u <= 1. {
-        return SegmentIntersection::Intersection;
+        return SegmentIntersection {
+            kind: IntersectionKind::Intersection,
+            intersection_point: ip
+        };
     }
 
-    SegmentIntersection::None
+    SegmentIntersection {
+        kind: IntersectionKind::None,
+        // They don't intersect
+        intersection_point: vz
+    }
 }
