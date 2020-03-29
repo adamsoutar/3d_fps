@@ -29,6 +29,7 @@ fn main() {
     let resources = resource_pool::create_and_load();
 
     // TODO (SOON): Load maps from files
+    let btex = String::from("bricks");
     let map: Vec<Sector> = vec![
         // Spawn room
         Sector {
@@ -36,33 +37,51 @@ fn main() {
                 Side {
                     p1: Vector2f::new(-256., 256.),
                     p2: Vector2f::new(78., 256.),
-                    neighbour: -1
+                    neighbour: -1,
+                    mid: btex.clone(),
+                    upper: btex.clone(),
+                    lower: btex.clone()
                 },
                 Side {
                     p1: Vector2f::new(78., 256.),
                     p2: Vector2f::new(178., 256.),
                     // This line is the portal to the corridor.
-                    neighbour: 1
+                    neighbour: 1,
+                    mid: btex.clone(),
+                    upper: btex.clone(),
+                    lower: btex.clone()
                 },
                 Side {
                     p1: Vector2f::new(178., 256.),
                     p2: Vector2f::new(256., 256.),
-                    neighbour: -1
+                    neighbour: -1,
+                    mid: btex.clone(),
+                    upper: btex.clone(),
+                    lower: btex.clone()
                 },
                 Side {
                     p1: Vector2f::new(256., 256.),
                     p2: Vector2f::new(256., -256.),
-                    neighbour: -1
+                    neighbour: -1,
+                    mid: btex.clone(),
+                    upper: btex.clone(),
+                    lower: btex.clone()
                 },
                 Side {
                     p1: Vector2f::new(256., -256.),
                     p2: Vector2f::new(-256., -256.),
-                    neighbour: -1
+                    neighbour: -1,
+                    mid: btex.clone(),
+                    upper: btex.clone(),
+                    lower: btex.clone()
                 },
                 Side {
                     p1: Vector2f::new(-256., -256.),
                     p2: Vector2f::new(-256., 256.),
-                    neighbour: -1
+                    neighbour: -1,
+                    mid: btex.clone(),
+                    upper: btex.clone(),
+                    lower: btex.clone()
                 }
             ],
             ceil_height: 128.,
@@ -74,22 +93,34 @@ fn main() {
                 Side {
                     p1: Vector2f::new(78., 256.),
                     p2: Vector2f::new(78., 768.),
-                    neighbour: -1
+                    neighbour: -1,
+                    mid: btex.clone(),
+                    upper: btex.clone(),
+                    lower: btex.clone()
                 },
                 Side {
                     p1: Vector2f::new(78., 768.),
                     p2: Vector2f::new(178., 768.),
-                    neighbour: 2
+                    neighbour: 2,
+                    mid: btex.clone(),
+                    upper: btex.clone(),
+                    lower: btex.clone()
                 },
                 Side {
                     p1: Vector2f::new(178., 768.),
                     p2: Vector2f::new(178., 256.),
-                    neighbour: -1
+                    neighbour: -1,
+                    mid: btex.clone(),
+                    upper: btex.clone(),
+                    lower: btex.clone()
                 },
                 Side {
                     p1: Vector2f::new(178., 256.),
                     p2: Vector2f::new(78., 256.),
-                    neighbour: 0
+                    neighbour: 0,
+                    mid: btex.clone(),
+                    upper: btex.clone(),
+                    lower: btex.clone()
                 }
             ],
             floor_height: 16.,
@@ -101,32 +132,50 @@ fn main() {
                 Side {
                     p1: Vector2f::new(78., 768.),
                     p2: Vector2f::new(0., 768.),
-                    neighbour: -1
+                    neighbour: -1,
+                    mid: btex.clone(),
+                    upper: btex.clone(),
+                    lower: btex.clone()
                 },
                 Side {
                     p1: Vector2f::new(0., 768.),
                     p2: Vector2f::new(0., 1024.),
-                    neighbour: -1
+                    neighbour: -1,
+                    mid: btex.clone(),
+                    upper: btex.clone(),
+                    lower: btex.clone()
                 },
                 Side {
                     p1: Vector2f::new(0., 1024.),
                     p2: Vector2f::new(512., 1024.),
-                    neighbour: -1
+                    neighbour: -1,
+                    mid: btex.clone(),
+                    upper: btex.clone(),
+                    lower: btex.clone()
                 },
                 Side {
                     p1: Vector2f::new(512., 1024.),
                     p2: Vector2f::new(512., 768.),
-                    neighbour: -1
+                    neighbour: -1,
+                    mid: btex.clone(),
+                    upper: btex.clone(),
+                    lower: btex.clone()
                 },
                 Side {
                     p1: Vector2f::new(512., 768.),
                     p2: Vector2f::new(178., 768.),
-                    neighbour: -1
+                    neighbour: -1,
+                    mid: btex.clone(),
+                    upper: btex.clone(),
+                    lower: btex.clone()
                 },
                 Side {
                     p1: Vector2f::new(178., 768.),
                     p2: Vector2f::new(78., 768.),
-                    neighbour: 1
+                    neighbour: 1,
+                    mid: btex.clone(),
+                    upper: btex.clone(),
+                    lower: btex.clone()
                 }
             ],
             floor_height: 24.,
@@ -166,7 +215,7 @@ fn main() {
 
     loop {
         let delta_time = clock.restart().as_seconds();
-        // println!("{} FPS", 1. / delta_time);
+        println!("{} FPS", 1. / delta_time);
 
         while let Some(event) = window.poll_event() {
             match event {
@@ -194,7 +243,7 @@ fn main() {
         }
 
         window.clear(&Color::BLACK);
-        draw_3d_map(&mut window, &map, &player, &mut offs);
+        draw_3d_map(&mut window, &resources, &map, &player, &mut offs);
         // draw_map(&mut window, &t_map, &player);
         window.display();
     }

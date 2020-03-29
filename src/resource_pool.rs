@@ -7,7 +7,7 @@ pub struct ResourcePool {
     pub textures: HashMap<String, RgbaImage>
 }
 
-pub fn create_and_load () {
+pub fn create_and_load () -> ResourcePool {
     println!("Loading resources...");
 
     let mut pool = ResourcePool {
@@ -25,5 +25,6 @@ pub fn create_and_load () {
         pool.textures.insert(tex_name, tex);
     }
 
-    println!("Resource pool loaded.")
+    println!("Resource pool loaded.");
+    pool
 }

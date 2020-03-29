@@ -5,6 +5,8 @@ use std::cmp::{min, max, PartialOrd};
 use crate::vector_utils::*;
 use crate::constants::*;
 use crate::map::*;
+use crate::resource_pool::ResourcePool;
+use image::RgbaImage;
 
 pub struct Cutoffs {
     pub top: i64,
@@ -17,11 +19,11 @@ struct RenderQueueItem {
     c_right: i64
 }
 
-pub fn draw_3d_map (window: &mut RenderWindow, map: &Vec<Sector>, player: &Thing, cutoffs: &mut Vec<Cutoffs>) {
-    draw_screen(window, cutoffs, map, player);
+pub fn draw_3d_map (window: &mut RenderWindow, resources: &ResourcePool, map: &Vec<Sector>, player: &Thing, cutoffs: &mut Vec<Cutoffs>) {
+    draw_screen(window, resources, cutoffs, map, player);
 }
 
-fn draw_screen (window: &mut RenderWindow, cutoffs: &mut Vec<Cutoffs>, map: &Vec<Sector>, player: &Thing) {
+fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &mut Vec<Cutoffs>, map: &Vec<Sector>, player: &Thing) {
     // Render queue is used for drawing portals
     let w = WIDTH as i64 / 2;
     let h = WIDTH as i64 / 2 - 1;
@@ -58,6 +60,19 @@ fn draw_screen (window: &mut RenderWindow, cutoffs: &mut Vec<Cutoffs>, map: &Vec
 
         // For each wall
         for side in &sect.sides {
+            let mid_tex = &resources.textures[&side.mid];
+            // TODO: Texture offsets
+            let (us0, vs0) = (0, 0);
+            let (us1, vs1) = mid_tex.dimensions();
+            let u0 = us0 as f32;
+            let v0 = vs0 as f32;
+            let u1 = us1 as f32 - 1.;
+            let v1 = vs1 as f32 - 1.;
+
+            // TODO
+            let upper_tex = &resources.textures[&side.upper];
+            let lower_tex = &resources.textures[&side.lower];
+
             let mut p1 = side.p1.clone();
             let mut p2 = side.p2.clone();
 
@@ -122,6 +137,10 @@ fn draw_screen (window: &mut RenderWindow, cutoffs: &mut Vec<Cutoffs>, map: &Vec
                     col = edge_colour
                 }
 
+                let z0 = p1.y;
+                let z1 = p2.y;
+                let alpha = ((x - x1) as f32 / (x2 - x1) as f32);
+
                 let ya = (x - x1) * (y2a - y1a) / (x2 - x1) + y1a;
                 let yb = (x - x1) * (y2b - y1b) / (x2 - x1) + y1b;
                 let cya = clamp(ya, ctoff.bottom, ctoff.top);
@@ -152,8 +171,13 @@ fn draw_screen (window: &mut RenderWindow, cutoffs: &mut Vec<Cutoffs>, map: &Vec
                     continue;
                 }
 
+
+                let ualpha = texmapping_calculation(alpha, u0, u1, z0, z1);
                 // Render wall
-                if DRAW_WALLS { vline(window, x, cya, cyb, col) }
+                if DRAW_WALLS {
+                    // vline(window, x, cya, cyb, col)
+                    textured_line(window, mid_tex, x, cya, cyb, ualpha, v0, v1);
+                }
             }
 
             if side.neighbour != -1 && endx >= beginx {
@@ -173,12 +197,42 @@ fn draw_screen (window: &mut RenderWindow, cutoffs: &mut Vec<Cutoffs>, map: &Vec
     }
 }
 
+fn texmapping_calculation (alpha: f32, u0: f32, u1: f32, z0: f32, z1: f32) -> f32 {
+    let numerator = (1. - alpha) * u0 / z0 + alpha * u1 / z1;
+    let denominator = (1. - alpha) * 1. / z0 + alpha * 1. / z1;
+    numerator / denominator
+}
+
 // Perhaps useful for medpacks, players, other sprites etc.
 fn world_to_screen_pos (v: Vector3f, player: &Thing) -> Vector2f {
     let p = rotate_vec(Vector2f::new(v.x, v.y) - player.pos, -player.rot);
     let x = p.x * XFOV / p.y;
     let y = (v.z - player.zpos) * YFOV / p.y;
     Vector2::new(x, y)
+}
+
+pub fn textured_line (window: &mut RenderWindow, texture: &RgbaImage, x: i64, start_y: i64, end_y: i64, ualpha: f32, v0: f32, v1: f32) {
+    let mut u = ualpha;
+    let (umax, _) = texture.dimensions();
+    let ufmax = umax as f32;
+
+    // Horizontal texture wrapping
+    while u > ufmax { u -= ufmax };
+
+    let mut va = VertexArray::default();
+    va.set_primitive_type(PrimitiveType::Lines);
+
+    for y in end_y..=start_y {
+        let a = (y - end_y) as f32 / (start_y - end_y) as f32;
+        let v = v0 + (v1 - v0) * a;
+
+        let c = texture.get_pixel(u as u32, v as u32).0;
+        let colour = Color::rgba(c[0], c[1], c[2], c[3]);
+
+        va.append(&Vertex::with_pos_color(sfml_vec(Vector2f::new(x as f32, y as f32)), colour));
+    }
+
+    window.draw(&va);
 }
 
 pub fn vline (window: &mut RenderWindow, x: i64, start_y: i64, end_y: i64, colour: Color) {

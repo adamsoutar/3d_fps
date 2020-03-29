@@ -9,7 +9,10 @@ pub struct Sector {
 pub struct Side {
     pub p1: Vector2f,
     pub p2: Vector2f,
-    pub neighbour: i32
+    pub neighbour: i32,
+    pub mid: String,
+    pub lower: String,
+    pub upper: String
 }
 
 // TODO: Do Thing as a trait
