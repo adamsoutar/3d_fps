@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 sfml = "0.14.0"
+image = "0.23.2"

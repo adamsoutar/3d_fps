@@ -12,6 +12,7 @@ mod map;
 use map::*;
 mod game_logic;
 use game_logic::*;
+mod resource_pool;
 
 fn main() {
     let mut window = RenderWindow::new(
@@ -23,6 +24,9 @@ fn main() {
     window.set_vertical_sync_enabled(false);
     window.set_mouse_cursor_visible(false);
     // window.set_framerate_limit(60);
+
+    // Load "wad stuff"
+    let resources = resource_pool::create_and_load();
 
     // TODO (SOON): Load maps from files
     let map: Vec<Sector> = vec![
@@ -125,8 +129,8 @@ fn main() {
                     neighbour: 1
                 }
             ],
-            floor_height: -200.,
-            ceil_height: 80.
+            floor_height: 24.,
+            ceil_height: 128.
         }
     ];
 
@@ -285,6 +289,9 @@ fn collision_detection (sect: &Sector, map: &Vec<Sector>, player: &mut Thing) {
             }
 
             // We're moving to that sector!
+            // TODO: Run collision detection here so we can't clip on a corner
+            //       It's a little more complicated than that, 'cause we need to
+            //       not clip the line we came into the sector over
             player.sector = nu;
             if step < 0. { player.falling = true }
         }
