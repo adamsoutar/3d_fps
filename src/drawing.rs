@@ -64,6 +64,7 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
             // TODO: Texture offsets
             let (us0, vs0) = (0, 0);
             let (us1, vs1) = mid_tex.dimensions();
+            // let (us1, vs1) = (1, 1);
             let u0 = us0 as f32;
             let v0 = vs0 as f32;
             let u1 = us1 as f32 - 1.;
@@ -173,6 +174,7 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
 
 
                 let ualpha = texmapping_calculation(alpha, u0, u1, z0, z1);
+
                 // Render wall
                 if DRAW_WALLS {
                     // vline(window, x, cya, cyb, col)
