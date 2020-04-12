@@ -149,9 +149,9 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
                 let cyb = clamp(yb, ctoff.bottom, ctoff.top);
 
                 // Render ceiling
-                if DRAW_CEILINGS { vline(window, x, ctoff.top, cya - 1, ceil_colour) }
+                if DRAW_CEILINGS { vline(x, ctoff.top, cya - 1, ceil_colour, pixels) }
                 // Render floor
-                if DRAW_FLOORS { vline(window, x, cyb + 1, ctoff.bottom, floor_colour) }
+                if DRAW_FLOORS { vline(x, cyb + 1, ctoff.bottom, floor_colour, pixels) }
 
                 if side.neighbour != -1 {
                     // We potentially have uppers/lowers
@@ -161,11 +161,11 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
                     let cnyb = clamp(nyb, ctoff.bottom, ctoff.top);
 
                     // Upper
-                    vline(window, x, cya, cnya - 1, upper_lower_colour);
+                    vline(x, cya, cnya - 1, upper_lower_colour, pixels);
                     ctoff.top = min(ctoff.top, min(cya, cnya));
 
                     // Lower
-                    vline(window, x, cnyb + 1, cyb, upper_lower_colour);
+                    vline(x, cnyb + 1, cyb, upper_lower_colour, pixels);
                     ctoff.bottom = clamp(min(cyb, cnyb), ctoff.bottom, 0);
                     ctoff.bottom = max(ctoff.bottom, max(cyb, cnyb));
 
@@ -178,8 +178,8 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
 
                 // Render wall
                 if DRAW_WALLS {
-                    vline(window, x, cya, cyb, col)
-                    // textured_line(window, mid_tex, x, cya, cyb, ualpha, v0, v1);
+                    // vline(x, cya, cyb, col, pixels)
+                    textured_line(mid_tex, x, cya, cyb, ualpha, v0, v1, pixels);
                 }
             }
 
@@ -214,7 +214,7 @@ fn world_to_screen_pos (v: Vector3f, player: &Thing) -> Vector2f {
     Vector2::new(x, y)
 }
 
-pub fn textured_line (window: &mut RenderWindow, texture: &RgbaImage, x: i64, start_y: i64, end_y: i64, ualpha: f32, v0: f32, v1: f32) {
+pub fn textured_line (texture: &RgbaImage, x: i64, start_y: i64, end_y: i64, ualpha: f32, v0: f32, v1: f32, pixels: &mut Vec<u8>) {
     let mut u = ualpha;
     let (umax, _) = texture.dimensions();
     let ufmax = umax as f32;
@@ -222,31 +222,40 @@ pub fn textured_line (window: &mut RenderWindow, texture: &RgbaImage, x: i64, st
     // Horizontal texture wrapping
     while u > ufmax { u -= ufmax };
 
-    let mut va = VertexArray::default();
-    va.set_primitive_type(PrimitiveType::Lines);
+    let uw = WIDTH as usize;
+    let scrnx = (x + WIDTH as i64 / 2) as usize;
+    let scrnys = (-start_y + HEIGHT as i64 / 2) as usize;
+    let scrnye = (-end_y + HEIGHT as i64 / 2) as usize;
+    let iscrnys = scrnys as i64;
+    let iscrnye = scrnye as i64;
 
-    for y in end_y..=start_y {
-        let a = (y - end_y) as f32 / (start_y - end_y) as f32;
+    for y in scrnys..scrnye {
+        let a = (y as i64 - iscrnye) as f32 / (iscrnys - iscrnye) as f32;
         let v = v0 + (v1 - v0) * a;
-
         let c = texture.get_pixel(u as u32, v as u32).0;
-        let colour = Color::rgba(c[0], c[1], c[2], c[3]);
 
-        va.append(&Vertex::with_pos_color(sfml_vec(Vector2f::new(x as f32, y as f32)), colour));
+        pixels[y * uw * 4 + scrnx * 4] = c[0];
+        pixels[y * uw * 4 + scrnx * 4 + 1] = c[1];
+        pixels[y * uw * 4 + scrnx * 4 + 2] = c[2];
+        pixels[y * uw * 4 + scrnx * 4 + 3] = c[3];
     }
-
-    window.draw(&va);
 }
 
-pub fn vline (window: &mut RenderWindow, x: i64, start_y: i64, end_y: i64, colour: Color) {
+pub fn vline (x: i64, start_y: i64, end_y: i64, colour: Color, pixels: &mut Vec<u8>) {
     // Lines must be drawn top to bottom
     if end_y > start_y { return }
 
-    let mut va = VertexArray::default();
-    va.set_primitive_type(PrimitiveType::Lines);
-    va.append(&Vertex::with_pos_color(sfml_vec(Vector2f::new(x as f32, start_y as f32)), colour));
-    va.append(&Vertex::with_pos_color(sfml_vec(Vector2f::new(x as f32, end_y as f32)), colour));
-    window.draw(&va);
+    let uw = WIDTH as usize;
+    let scrnx = (x + WIDTH as i64 / 2) as usize;
+    let scrnys = (-start_y + HEIGHT as i64 / 2) as usize;
+    let scrnye = (-end_y + HEIGHT as i64 / 2) as usize;
+
+    for y in scrnys..scrnye {
+        pixels[y * uw * 4 + scrnx * 4] = colour.r;
+        pixels[y * uw * 4 + scrnx * 4 + 1] = colour.g;
+        pixels[y * uw * 4 + scrnx * 4 + 2] = colour.b;
+        pixels[y * uw * 4 + scrnx * 4 + 3] = colour.a;
+    }
 }
 
 fn clamp<T:PartialOrd> (v: T, x: T, y: T) -> T {
