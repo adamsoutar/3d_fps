@@ -77,10 +77,15 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
 
             let mut p1 = side.p1.clone();
             let mut p2 = side.p2.clone();
+            // These pure versions won't be view frustum clipped
+            let mut pp1 = side.p1.clone();
+            let mut pp2 = side.p2.clone();
 
             // Rotate the map around the player
             p1 = rotate_vec(p1 - player.pos, -player.rot);
             p2 = rotate_vec(p2 - player.pos, -player.rot);
+            pp1 = rotate_vec(pp1 - player.pos, -player.rot);
+            pp2 = rotate_vec(pp2 - player.pos, -player.rot);
 
             // The wall is behind us
             if p1.y <= 0. && p2.y <= 0. { continue }
@@ -103,6 +108,10 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
             // Perspective calculations
             let x1 = (p1.x * XFOV / p1.y) as i64;
             let x2 = (p2.x * XFOV / p2.y) as i64;
+            // Pure perspective calculations
+            // Used for texture mapping
+            let px1 = (pp1.x * XFOV / pp1.y) as i64;
+            let px2 = (pp2.x * XFOV / pp2.y) as i64;
 
             // The cutoff renders this invisible
             if x1 >= x2 || x2 < now.c_left || x1 > now.c_right { continue }
@@ -141,7 +150,8 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
 
                 let z0 = p1.y;
                 let z1 = p2.y;
-                let alpha = ((x - x1) as f32 / (x2 - x1) as f32);
+
+                let alpha = ((x - px1) as f32 / (px2 - px1) as f32);
 
                 let ya = (x - x1) * (y2a - y1a) / (x2 - x1) + y1a;
                 let yb = (x - x1) * (y2b - y1b) / (x2 - x1) + y1b;
@@ -175,6 +185,9 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
 
 
                 let ualpha = texmapping_calculation(alpha, u0, u1, z0, z1);
+                if ualpha < 0. {
+                    println!("{} {} {}", x, px1, px2);
+                }
 
                 // Render wall
                 if DRAW_WALLS {
@@ -220,6 +233,9 @@ pub fn textured_line (texture: &RgbaImage, x: i64, start_y: i64, end_y: i64, rea
     let ufmax = umax as f32;
 
     // Horizontal texture wrapping
+    if u < 0. {
+        return;
+    }
     while u > ufmax { u -= ufmax };
 
     let uw = WIDTH as usize;
