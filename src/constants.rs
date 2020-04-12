@@ -11,8 +11,11 @@ pub const PLAYER_ACCELERATION: f32 = 1.5625;
 pub const PLAYER_SPEED_CAP: f32 = 30.;
 // Same as DOOM
 pub const PLAYER_EYE_HEIGHT: f32 = 41.;
+
 pub const WIDTH: u32 = 1920;
 pub const HEIGHT: u32 = 1080;
+pub const PIXEL_ARRAY_LENGTH: usize = WIDTH as usize * HEIGHT as usize * 4;
+
 pub const XFOV: f32 = 0.75 * WIDTH as f32;
 pub const YFOV: f32 = 0.9 * HEIGHT as f32;
 

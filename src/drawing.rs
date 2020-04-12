@@ -8,6 +8,7 @@ use crate::map::*;
 use crate::resource_pool::ResourcePool;
 use image::RgbaImage;
 
+#[derive(Clone)]
 pub struct Cutoffs {
     pub top: i64,
     pub bottom: i64
@@ -19,11 +20,11 @@ struct RenderQueueItem {
     c_right: i64
 }
 
-pub fn draw_3d_map (window: &mut RenderWindow, resources: &ResourcePool, map: &Vec<Sector>, player: &Thing, cutoffs: &mut Vec<Cutoffs>) {
-    draw_screen(window, resources, cutoffs, map, player);
+pub fn draw_3d_map (window: &mut RenderWindow, resources: &ResourcePool, map: &Vec<Sector>, player: &Thing, cutoffs: &mut Vec<Cutoffs>, pixels: &mut Vec<u8>) {
+    draw_screen(window, resources, cutoffs, map, player, pixels);
 }
 
-fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &mut Vec<Cutoffs>, map: &Vec<Sector>, player: &Thing) {
+fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &mut Vec<Cutoffs>, map: &Vec<Sector>, player: &Thing, pixels: &mut Vec<u8>) {
     // Render queue is used for drawing portals
     let w = WIDTH as i64 / 2;
     let h = WIDTH as i64 / 2 - 1;

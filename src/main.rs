@@ -198,14 +198,17 @@ fn main() {
     let mut accum = 0.;
 
     // Prepare this each frame
-    let mut offs: Vec<Cutoffs> = vec![];
     let h = HEIGHT as i64 / 2;
-    for _ in 0..WIDTH {
-        offs.push(Cutoffs {
-            top: h,
-            bottom: -h
-        })
-    }
+    let mut offs: Vec<Cutoffs> = vec![Cutoffs {
+        top: h,
+        bottom: -h
+    }; WIDTH as usize];
+
+
+    // Prepare render texture
+    let mut pixels: Vec<u8> = vec![255; PIXEL_ARRAY_LENGTH];
+
+    let mut render_texture = Texture::new(WIDTH, HEIGHT).unwrap();
 
     // Prepare for delta measurement
     let h32 = HEIGHT as i32 / 2;
@@ -215,7 +218,7 @@ fn main() {
 
     loop {
         let delta_time = clock.restart().as_seconds();
-        // println!("{} FPS", 1. / delta_time);
+        println!("{} FPS", 1. / delta_time);
 
         while let Some(event) = window.poll_event() {
             match event {
@@ -246,8 +249,12 @@ fn main() {
         }
 
         window.clear(&Color::BLACK);
-        draw_3d_map(&mut window, &resources, &map, &player, &mut offs);
-        // draw_map(&mut window, &t_map, &player);
+        draw_3d_map(&mut window, &resources, &map, &player, &mut offs, &mut pixels);
+
+        render_texture.update_from_pixels(&pixels, WIDTH, HEIGHT, 0, 0);
+        let render_sprite = Sprite::with_texture(&render_texture);
+        window.draw(&render_sprite);
+
         window.display();
     }
 }
