@@ -177,8 +177,8 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
 
                 // Render wall
                 if DRAW_WALLS {
-                    // vline(window, x, cya, cyb, col)
-                    textured_line(window, mid_tex, x, cya, cyb, ualpha, v0, v1);
+                    vline(window, x, cya, cyb, col)
+                    // textured_line(window, mid_tex, x, cya, cyb, ualpha, v0, v1);
                 }
             }
 

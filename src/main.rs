@@ -22,7 +22,7 @@ fn main() {
         &Default::default(),
     );
     window.set_vertical_sync_enabled(false);
-    window.set_mouse_cursor_visible(false);
+    window.set_mouse_cursor_visible(!(ENABLE_VERTICAL_MOUSELOOK || ENABLE_VERTICAL_MOUSELOOK));
     // window.set_framerate_limit(60);
 
     // Load "wad stuff"
@@ -215,7 +215,7 @@ fn main() {
 
     loop {
         let delta_time = clock.restart().as_seconds();
-        println!("{} FPS", 1. / delta_time);
+        // println!("{} FPS", 1. / delta_time);
 
         while let Some(event) = window.poll_event() {
             match event {
@@ -226,8 +226,11 @@ fn main() {
 
         // Mouselook
         let delta_mouse = window.mouse_position() - center;
-        mouselook(delta_mouse, &mut player);
-        center_mouse(&mut window);
+
+        if ENABLE_VERTICAL_MOUSELOOK || ENABLE_HORIZONTAL_MOUSELOOK {
+            mouselook(delta_mouse, &mut player);
+            center_mouse(&mut window);
+        }
 
         accum += delta_time;
         if accum > PHYSICS_TIMESTEP {
