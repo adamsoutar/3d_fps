@@ -179,7 +179,7 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
                 // Render wall
                 if DRAW_WALLS {
                     // vline(x, cya, cyb, col, pixels)
-                    textured_line(mid_tex, x, cya, cyb, ualpha, v0, v1, pixels);
+                    textured_line(mid_tex, x, cya, cyb, ya, yb, ualpha, v0, v1, pixels);
                 }
             }
 
@@ -214,7 +214,7 @@ fn world_to_screen_pos (v: Vector3f, player: &Thing) -> Vector2f {
     Vector2::new(x, y)
 }
 
-pub fn textured_line (texture: &RgbaImage, x: i64, start_y: i64, end_y: i64, ualpha: f32, v0: f32, v1: f32, pixels: &mut Vec<u8>) {
+pub fn textured_line (texture: &RgbaImage, x: i64, start_y: i64, end_y: i64, real_sy: i64, real_ey: i64, ualpha: f32, v0: f32, v1: f32, pixels: &mut Vec<u8>) {
     let mut u = ualpha;
     let (umax, _) = texture.dimensions();
     let ufmax = umax as f32;
@@ -226,11 +226,11 @@ pub fn textured_line (texture: &RgbaImage, x: i64, start_y: i64, end_y: i64, ual
     let scrnx = (x + WIDTH as i64 / 2) as usize;
     let scrnys = (-start_y + HEIGHT as i64 / 2) as usize;
     let scrnye = (-end_y + HEIGHT as i64 / 2) as usize;
-    let iscrnys = scrnys as i64;
-    let iscrnye = scrnye as i64;
+    let rys = (-real_sy + HEIGHT as i64 / 2) as i64;
+    let rye = (-real_ey + HEIGHT as i64 / 2) as i64;
 
     for y in scrnys..scrnye {
-        let a = (y as i64 - iscrnye) as f32 / (iscrnys - iscrnye) as f32;
+        let a = 1. - (y as i64 - rye) as f32 / (rys - rye) as f32;
         let v = v0 + (v1 - v0) * a;
         let c = texture.get_pixel(u as u32, v as u32).0;
 

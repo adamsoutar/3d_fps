@@ -30,6 +30,7 @@ fn main() {
 
     // TODO (SOON): Load maps from files
     let btex = String::from("bricks");
+    let ctex = String::from("concrete");
     let map: Vec<Sector> = vec![
         // Spawn room
         Sector {
@@ -38,7 +39,7 @@ fn main() {
                     p1: Vector2f::new(-256., 256.),
                     p2: Vector2f::new(78., 256.),
                     neighbour: -1,
-                    mid: btex.clone(),
+                    mid: ctex.clone(),
                     upper: btex.clone(),
                     lower: btex.clone()
                 },
@@ -55,7 +56,7 @@ fn main() {
                     p1: Vector2f::new(178., 256.),
                     p2: Vector2f::new(256., 256.),
                     neighbour: -1,
-                    mid: btex.clone(),
+                    mid: ctex.clone(),
                     upper: btex.clone(),
                     lower: btex.clone()
                 },
