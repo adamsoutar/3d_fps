@@ -122,10 +122,6 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
             // Perspective calculations
             let x1 = (p1.x * XFOV / p1.y) as i64;
             let x2 = (p2.x * XFOV / p2.y) as i64;
-            // Pure perspective calculations
-            // Used for texture mapping
-            let px1 = (pp1.x * XFOV / pp1.y) as i64;
-            let px2 = (pp2.x * XFOV / pp2.y) as i64;
 
             // The cutoff renders this invisible
             if x1 >= x2 || x2 < now.c_left || x1 > now.c_right { continue }
@@ -199,9 +195,6 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
 
 
                 let ualpha = texmapping_calculation(alpha, u0, u1, z0, z1);
-                if ualpha < 0. {
-                    println!("{} {} {}", x, px1, px2);
-                }
 
                 // Render wall
                 if DRAW_WALLS {
@@ -276,9 +269,16 @@ pub fn vline (x: i64, start_y: i64, end_y: i64, colour: Color, pixels: &mut Vec<
     if end_y > start_y { return }
 
     let uw = WIDTH as usize;
-    let scrnx = (x + WIDTH as i64 / 2) as usize;
-    let scrnys = (-start_y + HEIGHT as i64 / 2) as usize;
-    let scrnye = (-end_y + HEIGHT as i64 / 2) as usize;
+    let uh = HEIGHT as usize;
+
+    let mut scrnx = (x + WIDTH as i64 / 2) as usize;
+    let mut scrnys = (-start_y + HEIGHT as i64 / 2) as usize;
+    let mut scrnye = (-end_y + HEIGHT as i64 / 2) as usize;
+
+    // TODO: Find out why we're getting draws above/below the screen
+    scrnye = clamp(scrnye, 0, uh);
+    scrnys = clamp(scrnys, 0, uh);
+    scrnx = clamp(scrnx, 0, uw);
 
     for y in scrnys..scrnye {
         pixels[y * uw * 4 + scrnx * 4] = colour.r;

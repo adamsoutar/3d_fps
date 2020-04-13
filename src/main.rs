@@ -179,7 +179,7 @@ fn main() {
                     lower: btex.clone()
                 }
             ],
-            floor_height: 24.,
+            floor_height: -128.,
             ceil_height: 128.
         }
     ];
@@ -219,7 +219,7 @@ fn main() {
 
     loop {
         let delta_time = clock.restart().as_seconds();
-        // println!("{} FPS", 1. / delta_time);
+        println!("{} FPS", 1. / delta_time);
 
         while let Some(event) = window.poll_event() {
             match event {
