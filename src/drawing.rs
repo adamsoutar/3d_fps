@@ -1,3 +1,6 @@
+// TODO: THERE'S A BUG WITH VERTICAL MOUSELOOK THAT CRASHES THE GAME WHEN
+//       YOU LOOK TOO HIGH. IT'S PROBABLY ALSO CAUSED BY A SECTOR THAT'S TOO HIGH UP
+
 use sfml::graphics::*;
 use sfml::system::*;
 use std::cmp::{min, max, PartialOrd};
@@ -66,9 +69,9 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
             let (us0, vs0) = (0, 0);
             let (us1, vs1) = mid_tex.dimensions();
             // let (us1, vs1) = (1, 1);
-            let u0 = us0 as f32;
+            let mut u0 = us0 as f32;
             let v0 = vs0 as f32;
-            let u1 = us1 as f32 - 1.;
+            let mut u1 = us1 as f32 - 1.;
             let v1 = vs1 as f32 - 1.;
 
             // TODO
@@ -100,6 +103,17 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
                 if p2.y <= 0. {
                     if i1.y > 0. { p2 = i1 } else { p2 = i2 }
                 }
+            }
+
+            // Frustum clip correction for texture mapping
+            // From Bisqwit's code
+            // https://bisqwit.iki.fi/jutut/kuvat/programming_examples/portalrendering.html
+            if (p2.x - p1.x).abs() > (p2.y - p1.y).abs() {
+                u0 = (p1.x - pp1.x) * u1 / (pp2.x - pp1.x);
+                u1 = (p2.x - pp1.x) * u1 / (pp2.x - pp1.x);
+            } else {
+                u0 = (p1.y - pp1.y) * u1 / (pp2.y - pp1.y);
+                u1 = (p2.y - pp1.y) * u1 / (pp2.y - pp1.y);
             }
 
             let yceil = sect.ceil_height - player.zpos;
@@ -151,7 +165,7 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
                 let z0 = p1.y;
                 let z1 = p2.y;
 
-                let alpha = ((x - px1) as f32 / (px2 - px1) as f32);
+                let alpha = ((x - x1) as f32 / (x2 - x1) as f32);
 
                 let ya = (x - x1) * (y2a - y1a) / (x2 - x1) + y1a;
                 let yb = (x - x1) * (y2b - y1b) / (x2 - x1) + y1b;
