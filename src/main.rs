@@ -2,6 +2,8 @@ use sfml::graphics::*;
 use sfml::window::*;
 use sfml::system::*;
 
+// TEST
+
 mod vector_utils;
 use vector_utils::*;
 mod drawing;
