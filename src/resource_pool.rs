@@ -2,6 +2,7 @@ use std::fs;
 use std::collections::HashMap;
 use image;
 use image::RgbaImage;
+use std::time::Instant;
 
 // FIXME: Textures have to be square or they exhibit corruption??
 pub struct GameTexture {
@@ -16,6 +17,7 @@ pub struct ResourcePool {
 
 pub fn create_and_load () -> ResourcePool {
     println!("Loading resources...");
+    let started_load = Instant::now();
 
     let mut pool = ResourcePool {
         textures: HashMap::new()
@@ -58,6 +60,6 @@ pub fn create_and_load () -> ResourcePool {
         });
     }
 
-    println!("Resource pool loaded.");
+    println!("Resource pool loaded in {}ms.", started_load.elapsed().as_millis());
     pool
 }

@@ -206,12 +206,14 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
 
                     // Upper
                     let uualpha = texmapping_calculation(alpha, uu0, uu1, z0, z1);
-                    textured_line(upper_tex, x, cya, cnya - 1, ya, nya, uualpha, vu0, vu1, pixels);
+                    let upper_height = (sect.ceil_height - nyceil).abs();
+                    textured_line(upper_tex, x, cya, cnya - 1, ya, nya, uualpha, vu0, vu1, pixels, upper_height);
                     ctoff.top = min(ctoff.top, min(cya, cnya));
 
                     // Lower
                     let ulalpha = texmapping_calculation(alpha, ul0, ul1, z0, z1);
-                    textured_line(lower_tex, x, cnyb + 1, cyb, nyb + 1, yb, ulalpha, vl0, vl1, pixels);
+                    let lower_height = (sect.floor_height - nyfloor).abs();
+                    textured_line(lower_tex, x, cnyb + 1, cyb, nyb + 1, yb, ulalpha, vl0, vl1, pixels, lower_height);
                     ctoff.bottom = clamp(min(cyb, cnyb), ctoff.bottom, 0);
                     ctoff.bottom = max(ctoff.bottom, max(cyb, cnyb));
 
@@ -222,7 +224,8 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
                 // Render wall
                 if DRAW_WALLS {
                     let umalpha = texmapping_calculation(alpha, um0, um1, z0, z1);
-                    textured_line(mid_tex, x, cya, cyb, ya, yb, umalpha, vm0, vm1, pixels);
+                    let sec_height = sect.ceil_height - sect.floor_height;
+                    textured_line(mid_tex, x, cya, cyb, ya, yb, umalpha, vm0, vm1, pixels, sec_height);
                 }
             }
 
@@ -257,7 +260,8 @@ fn world_to_screen_pos (v: Vector3f, player: &Thing) -> Vector2f {
     Vector2::new(x, y)
 }
 
-pub fn textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, real_sy: i64, real_ey: i64, ualpha: f32, v0: f32, v1: f32, pixels: &mut Vec<u8>) {
+// Dude this function takes too many params
+pub fn textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, real_sy: i64, real_ey: i64, ualpha: f32, v0: f32, v1: f32, pixels: &mut Vec<u8>, wall_height: f32) {
     let mut u = ualpha;
     let umax = texture.width;
     let ufmax = umax as f32;
@@ -292,18 +296,24 @@ pub fn textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, r
 
     for y in scrnys..scrnye {
         let a = 1. - (y as i64 - rye) as f32 / (rys - rye) as f32;
-        let v = v0 + (v1 - v0) * a;
-        let uu = u as usize;
-        let uv = v as usize;
-
-        let i1 = y * uw * 4 + scrnx * 4;
-        let i2 = uv * umax * 4 + uu * 4;
+        let v = wall_height * a;
 
         if a > 1. {
             // This happens with portals above the player's view
             // it's not an issue.
             continue;
         }
+
+        let uu = u as usize;
+        let mut uv = v as usize;
+
+        // Wrapping
+        while uv >= texture.height {
+            uv -= texture.height
+        }
+
+        let i1 = y * uw * 4 + scrnx * 4;
+        let i2 = uv * umax * 4 + uu * 4;
 
         pixels[i1] = texture.pixels[i2];
         pixels[i1 + 1] = texture.pixels[i2 + 1];

@@ -135,7 +135,7 @@ fn main() {
                     p1: Vector2f::new(78., 768.),
                     p2: Vector2f::new(0., 768.),
                     neighbour: -1,
-                    mid: stex.clone(),
+                    mid: btex.clone(),
                     upper: stex.clone(),
                     lower: stex.clone()
                 },
@@ -175,13 +175,13 @@ fn main() {
                     p1: Vector2f::new(178., 768.),
                     p2: Vector2f::new(78., 768.),
                     neighbour: 1,
-                    mid: stex.clone(),
-                    upper: stex.clone(),
-                    lower: stex.clone()
+                    mid: btex.clone(),
+                    upper: btex.clone(),
+                    lower: btex.clone()
                 }
             ],
-            floor_height: -128.,
-            ceil_height: 128.
+            floor_height: 0.,
+            ceil_height: 256.
         }
     ];
 
