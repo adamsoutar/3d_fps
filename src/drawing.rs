@@ -236,6 +236,10 @@ fn world_to_screen_pos (v: Vector3f, player: &Thing) -> Vector2f {
     Vector2::new(x, y)
 }
 
+pub fn depth_textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, pixels: &mut Vec<u8>, hei: f32) {
+
+}
+
 // Dude this function takes too many params
 pub fn textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, real_sy: i64, real_ey: i64, ualpha: f32, pixels: &mut Vec<u8>, wall_height: f32) {
     let mut u = ualpha;
@@ -246,7 +250,7 @@ pub fn textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, r
     if u < 0. {
         return;
     }
-    while u >= ufmax { u -= ufmax };
+    u %= ufmax;
 
 
     let uw = WIDTH as usize;
@@ -284,9 +288,7 @@ pub fn textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, r
         let mut uv = v as usize;
 
         // Wrapping
-        while uv >= texture.height {
-            uv -= texture.height
-        }
+        uv %= texture.height;
 
         let i1 = y * uw * 4 + scrnx * 4;
         let i2 = uv * umax * 4 + uu * 4;
