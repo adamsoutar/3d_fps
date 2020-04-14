@@ -82,6 +82,12 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
             let vu1 = vus1 as f32 - 1.;
 
             let lower_tex = &resources.textures[&side.lower];
+            let (uls0, vls0) = (0,0);
+            let (uls1, vls1) = (lower_tex.width, lower_tex.height);
+            let mut ul0 = uls0 as f32;
+            let vl0 = vls0 as f32;
+            let mut ul1 = uls1 as f32 - 1.;
+            let vl1 = vls1 as f32 - 1.;
 
             let mut p1 = side.p1.clone();
             let mut p2 = side.p2.clone();
@@ -190,7 +196,6 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
                 // Render floor
                 if DRAW_FLOORS { vline(x, cyb + 1, ctoff.bottom, floor_colour, pixels) }
 
-                let ualpha = texmapping_calculation(alpha, um0, um1, z0, z1);
 
                 if side.neighbour != -1 {
                     // We potentially have uppers/lowers
@@ -200,12 +205,13 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
                     let cnyb = clamp(nyb, ctoff.bottom, ctoff.top);
 
                     // Upper
-                    textured_line(upper_tex, x, cya, cnya - 1, ya, nya, ualpha, vu0, vu1, pixels);
+                    let uualpha = texmapping_calculation(alpha, uu0, uu1, z0, z1);
+                    textured_line(upper_tex, x, cya, cnya - 1, ya, nya, uualpha, vu0, vu1, pixels);
                     // vline(x, cya, cnya - 1, upper_lower_colour, pixels);
                     ctoff.top = min(ctoff.top, min(cya, cnya));
 
                     // Lower
-                    vline(x, cnyb + 1, cyb, upper_lower_colour, pixels);
+                    // vline(x, cnyb + 1, cyb, upper_lower_colour, pixels);
                     ctoff.bottom = clamp(min(cyb, cnyb), ctoff.bottom, 0);
                     ctoff.bottom = max(ctoff.bottom, max(cyb, cnyb));
 
@@ -216,7 +222,8 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
                 // Render wall
                 if DRAW_WALLS {
                     // vline(x, cya, cyb, col, pixels)
-                    textured_line(mid_tex, x, cya, cyb, ya, yb, ualpha, vm0, vm1, pixels);
+                    let umalpha = texmapping_calculation(alpha, um0, um1, z0, z1);
+                    textured_line(mid_tex, x, cya, cyb, ya, yb, umalpha, vm0, vm1, pixels);
                 }
             }
 
@@ -298,27 +305,30 @@ pub fn textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, r
 }
 
 pub fn vline (x: i64, start_y: i64, end_y: i64, colour: Color, pixels: &mut Vec<u8>) {
+    // Unsupported to discourage me from fixing bugs in this function
+    return;
+
     // Lines must be drawn top to bottom
-    if end_y > start_y { return }
-
-    let uw = WIDTH as usize;
-    let uh = HEIGHT as usize;
-
-    let mut scrnx = (x + WIDTH as i64 / 2) as usize;
-    let mut scrnys = (-start_y + HEIGHT as i64 / 2) as usize;
-    let mut scrnye = (-end_y + HEIGHT as i64 / 2) as usize;
-
-    // TODO: Find out why we're getting draws above/below the screen
-    scrnye = clamp(scrnye, 0, uh);
-    scrnys = clamp(scrnys, 0, uh);
-    scrnx = clamp(scrnx, 0, uw);
-
-    for y in scrnys..scrnye {
-        pixels[y * uw * 4 + scrnx * 4] = colour.r;
-        pixels[y * uw * 4 + scrnx * 4 + 1] = colour.g;
-        pixels[y * uw * 4 + scrnx * 4 + 2] = colour.b;
-        pixels[y * uw * 4 + scrnx * 4 + 3] = colour.a;
-    }
+    // if end_y > start_y { return }
+    //
+    // let uw = WIDTH as usize;
+    // let uh = HEIGHT as usize;
+    //
+    // let mut scrnx = (x + WIDTH as i64 / 2) as usize;
+    // let mut scrnys = (-start_y + HEIGHT as i64 / 2) as usize;
+    // let mut scrnye = (-end_y + HEIGHT as i64 / 2) as usize;
+    //
+    // // TODO: Find out why we're getting draws above/below the screen
+    // scrnye = clamp(scrnye, 0, uh);
+    // scrnys = clamp(scrnys, 0, uh);
+    // scrnx = clamp(scrnx, 0, uw);
+    //
+    // for y in scrnys..scrnye {
+    //     pixels[y * uw * 4 + scrnx * 4] = colour.r;
+    //     pixels[y * uw * 4 + scrnx * 4 + 1] = colour.g;
+    //     pixels[y * uw * 4 + scrnx * 4 + 2] = colour.b;
+    //     pixels[y * uw * 4 + scrnx * 4 + 3] = colour.a;
+    // }
 }
 
 fn clamp<T:PartialOrd> (v: T, x: T, y: T) -> T {
