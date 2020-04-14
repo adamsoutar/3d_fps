@@ -28,7 +28,12 @@ pub fn create_and_load () -> ResourcePool {
     for path in paths {
         let pth = path.unwrap().path();
         let tex_name = pth.file_stem().unwrap().to_str().unwrap().to_owned();
-        let ext = pth.extension().unwrap();
+
+        let ex = pth.extension();
+        // Files like .DS_Store don't show up as having extensions
+        if ex.is_none() { continue }
+
+        let ext = ex.unwrap();
 
         if ext != "png" && ext != "jpg" && ext != "bmp" {
             println!("Texture with extension {:?} wasn't loaded because it wasn't PNG, JPG or BMP.", ext);
