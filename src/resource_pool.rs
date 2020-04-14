@@ -3,8 +3,15 @@ use std::collections::HashMap;
 use image;
 use image::RgbaImage;
 
+// FIXME: Textures have to be square or they exhibit corruption??
+pub struct GameTexture {
+    pub width: usize,
+    pub height: usize,
+    pub pixels: Vec<u8>
+}
+
 pub struct ResourcePool {
-    pub textures: HashMap<String, RgbaImage>
+    pub textures: HashMap<String, GameTexture>
 }
 
 pub fn create_and_load () -> ResourcePool {
@@ -29,7 +36,26 @@ pub fn create_and_load () -> ResourcePool {
         println!("Loading \"{}\"...", tex_name);
         let tex = image::open(&pth).unwrap().to_rgba();
 
-        pool.textures.insert(tex_name, tex);
+        let (w, h) = tex.dimensions();
+
+        // Decompress and save into memory the colours
+        // Speeds up render
+        let mut pixels = vec![];
+        for x in 0..w {
+            for y in 0..h {
+                let col = tex.get_pixel(x, y).0;
+                pixels.push(col[0]);
+                pixels.push(col[1]);
+                pixels.push(col[2]);
+                pixels.push(col[3]);
+            }
+        }
+
+        pool.textures.insert(tex_name, GameTexture {
+            width: w as usize,
+            height: h as usize,
+            pixels
+        });
     }
 
     println!("Resource pool loaded.");

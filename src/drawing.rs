@@ -8,7 +8,7 @@ use std::cmp::{min, max, PartialOrd};
 use crate::vector_utils::*;
 use crate::constants::*;
 use crate::map::*;
-use crate::resource_pool::ResourcePool;
+use crate::resource_pool::{ResourcePool, GameTexture};
 use image::RgbaImage;
 
 #[derive(Clone)]
@@ -66,16 +66,21 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
         for side in &sect.sides {
             let mid_tex = &resources.textures[&side.mid];
             // TODO: Texture offsets
-            let (us0, vs0) = (0, 0);
-            let (us1, vs1) = mid_tex.dimensions();
-            // let (us1, vs1) = (1, 1);
-            let mut u0 = us0 as f32;
-            let v0 = vs0 as f32;
-            let mut u1 = us1 as f32 - 1.;
-            let v1 = vs1 as f32 - 1.;
+            let (ums0, vms0) = (0, 0);
+            let (ums1, vms1) = (mid_tex.width, mid_tex.height);
+            let mut um0 = ums0 as f32;
+            let vm0 = vms0 as f32;
+            let mut um1 = ums1 as f32 - 1.;
+            let vm1 = vms1 as f32 - 1.;
 
-            // TODO
             let upper_tex = &resources.textures[&side.upper];
+            let (uus0, vus0) = (0,0);
+            let (uus1, vus1) = (upper_tex.width, upper_tex.height);
+            let mut uu0 = uus0 as f32;
+            let vu0 = vus0 as f32;
+            let mut uu1 = uus1 as f32 - 1.;
+            let vu1 = vus1 as f32 - 1.;
+
             let lower_tex = &resources.textures[&side.lower];
 
             let mut p1 = side.p1.clone();
@@ -109,11 +114,23 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
             // From Bisqwit's code
             // https://bisqwit.iki.fi/jutut/kuvat/programming_examples/portalrendering.html
             if (p2.x - p1.x).abs() > (p2.y - p1.y).abs() {
-                u0 = (p1.x - pp1.x) * u1 / (pp2.x - pp1.x);
-                u1 = (p2.x - pp1.x) * u1 / (pp2.x - pp1.x);
+                let c1 = (p1.x - pp1.x) / (pp2.x - pp1.x);
+                let c2 = (p2.x - pp1.x) / (pp2.x - pp1.x);
+
+                um0 = c1 * um1;
+                um1 = c2 * um1;
+
+                uu0 = c1 * uu1;
+                uu1 = c2 * uu1;
             } else {
-                u0 = (p1.y - pp1.y) * u1 / (pp2.y - pp1.y);
-                u1 = (p2.y - pp1.y) * u1 / (pp2.y - pp1.y);
+                let c1 = (p1.y - pp1.y) / (pp2.y - pp1.y);
+                let c2 = (p2.y - pp1.y) / (pp2.y - pp1.y);
+
+                um0 = c1 * um1;
+                um1 = c2 * um1;
+
+                uu0 = c1 * uu1;
+                uu1 = c2 * uu1;
             }
 
             let yceil = sect.ceil_height - player.zpos;
@@ -173,6 +190,8 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
                 // Render floor
                 if DRAW_FLOORS { vline(x, cyb + 1, ctoff.bottom, floor_colour, pixels) }
 
+                let ualpha = texmapping_calculation(alpha, um0, um1, z0, z1);
+
                 if side.neighbour != -1 {
                     // We potentially have uppers/lowers
                     let nya = (x - x1) * (ny2a - ny1a) / (x2 - x1) + ny1a;
@@ -181,7 +200,8 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
                     let cnyb = clamp(nyb, ctoff.bottom, ctoff.top);
 
                     // Upper
-                    vline(x, cya, cnya - 1, upper_lower_colour, pixels);
+                    textured_line(upper_tex, x, cya, cnya - 1, ya, nya, ualpha, vu0, vu1, pixels);
+                    // vline(x, cya, cnya - 1, upper_lower_colour, pixels);
                     ctoff.top = min(ctoff.top, min(cya, cnya));
 
                     // Lower
@@ -193,13 +213,10 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
                     continue;
                 }
 
-
-                let ualpha = texmapping_calculation(alpha, u0, u1, z0, z1);
-
                 // Render wall
                 if DRAW_WALLS {
                     // vline(x, cya, cyb, col, pixels)
-                    textured_line(mid_tex, x, cya, cyb, ya, yb, ualpha, v0, v1, pixels);
+                    textured_line(mid_tex, x, cya, cyb, ya, yb, ualpha, vm0, vm1, pixels);
                 }
             }
 
@@ -212,7 +229,7 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
             }
         }
 
-        // So we don't draw self-refferential mirrors forever
+        // So we don't draw self-referential mirrors forever
         drawn.push(now.sector_id);
         if drawn.len() >= MAX_SECTOR_DRAWS {
             return;
@@ -234,9 +251,9 @@ fn world_to_screen_pos (v: Vector3f, player: &Thing) -> Vector2f {
     Vector2::new(x, y)
 }
 
-pub fn textured_line (texture: &RgbaImage, x: i64, start_y: i64, end_y: i64, real_sy: i64, real_ey: i64, ualpha: f32, v0: f32, v1: f32, pixels: &mut Vec<u8>) {
+pub fn textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, real_sy: i64, real_ey: i64, ualpha: f32, v0: f32, v1: f32, pixels: &mut Vec<u8>) {
     let mut u = ualpha;
-    let (umax, _) = texture.dimensions();
+    let umax = texture.width;
     let ufmax = umax as f32;
 
     // Horizontal texture wrapping
@@ -245,22 +262,38 @@ pub fn textured_line (texture: &RgbaImage, x: i64, start_y: i64, end_y: i64, rea
     }
     while u > ufmax { u -= ufmax };
 
+
     let uw = WIDTH as usize;
+    let uh = HEIGHT as usize;
+
     let scrnx = (x + WIDTH as i64 / 2) as usize;
-    let scrnys = (-start_y + HEIGHT as i64 / 2) as usize;
-    let scrnye = (-end_y + HEIGHT as i64 / 2) as usize;
+
+    let mut scrnys = (-start_y + HEIGHT as i64 / 2) as usize;
+    let mut scrnye = (-end_y + HEIGHT as i64 / 2) as usize;
+    scrnys = clamp(scrnys, 0, uh - 1);
+    scrnye = clamp(scrnye, 0, uh - 1);
+
     let rys = (-real_sy + HEIGHT as i64 / 2) as i64;
     let rye = (-real_ey + HEIGHT as i64 / 2) as i64;
+
+    if scrnx < 0 || scrnx >= uw || rye < 0 || rys >= HEIGHT as i64 {
+        // It's offscreen
+        return;
+    }
 
     for y in scrnys..scrnye {
         let a = 1. - (y as i64 - rye) as f32 / (rys - rye) as f32;
         let v = v0 + (v1 - v0) * a;
-        let c = texture.get_pixel(u as u32, v as u32).0;
+        let uu = u as usize;
+        let uv = v as usize;
 
-        pixels[y * uw * 4 + scrnx * 4] = c[0];
-        pixels[y * uw * 4 + scrnx * 4 + 1] = c[1];
-        pixels[y * uw * 4 + scrnx * 4 + 2] = c[2];
-        pixels[y * uw * 4 + scrnx * 4 + 3] = c[3];
+        let i1 = y * uw * 4 + scrnx * 4;
+        let i2 = uu * umax * 4 + uv * 4;
+
+        pixels[i1] = texture.pixels[i2];
+        pixels[i1 + 1] = texture.pixels[i2 + 1];
+        pixels[i1 + 2] = texture.pixels[i2 + 2];
+        pixels[i1 + 3] = texture.pixels[i2 + 3];
     }
 }
 
