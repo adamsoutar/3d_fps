@@ -290,7 +290,6 @@ pub fn textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, r
     }
     u %= ufmax;
 
-
     let uw = WIDTH as usize;
     let uh = HEIGHT as usize;
 
@@ -335,33 +334,6 @@ pub fn textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, r
         pixels[i1 + 1] = texture.pixels[i2 + 1];
         pixels[i1 + 2] = texture.pixels[i2 + 2];
         pixels[i1 + 3] = texture.pixels[i2 + 3];
-    }
-}
-
-pub fn vline (x: i64, start_y: i64, end_y: i64, colour: Color, pixels: &mut Vec<u8>) {
-    // Unsupported to discourage me from fixing bugs in this function
-    // return;
-
-    // Lines must be drawn top to bottom
-    if end_y > start_y { return }
-
-    let uw = WIDTH as usize;
-    let uh = HEIGHT as usize;
-
-    let mut scrnx = (x + WIDTH as i64 / 2) as usize;
-    let mut scrnys = (-start_y + HEIGHT as i64 / 2) as usize;
-    let mut scrnye = (-end_y + HEIGHT as i64 / 2) as usize;
-
-    // TODO: Find out why we're getting draws above/below the screen
-    scrnye = clamp(scrnye, 0, uh);
-    scrnys = clamp(scrnys, 0, uh);
-    scrnx = clamp(scrnx, 0, uw);
-
-    for y in scrnys..scrnye {
-        pixels[y * uw * 4 + scrnx * 4] = colour.r;
-        pixels[y * uw * 4 + scrnx * 4 + 1] = colour.g;
-        pixels[y * uw * 4 + scrnx * 4 + 2] = colour.b;
-        pixels[y * uw * 4 + scrnx * 4 + 3] = colour.a;
     }
 }
 
