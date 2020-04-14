@@ -64,30 +64,14 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
 
         // For each wall
         for side in &sect.sides {
-            let mid_tex = &resources.textures[&side.mid];
             // TODO: Texture offsets
-            let (ums0, vms0) = (0, 0);
-            let (ums1, vms1) = (mid_tex.width, mid_tex.height);
-            let mut um0 = ums0 as f32;
-            let vm0 = vms0 as f32;
-            let mut um1 = ums1 as f32 - 1.;
-            let vm1 = vms1 as f32 - 1.;
-
+            let mid_tex = &resources.textures[&side.mid];
             let upper_tex = &resources.textures[&side.upper];
-            let (uus0, vus0) = (0,0);
-            let (uus1, vus1) = (upper_tex.width, upper_tex.height);
-            let mut uu0 = uus0 as f32;
-            let vu0 = vus0 as f32;
-            let mut uu1 = uus1 as f32 - 1.;
-            let vu1 = vus1 as f32 - 1.;
-
             let lower_tex = &resources.textures[&side.lower];
-            let (uls0, vls0) = (0,0);
-            let (uls1, vls1) = (lower_tex.width, lower_tex.height);
-            let mut ul0 = uls0 as f32;
-            let vl0 = vls0 as f32;
-            let mut ul1 = uls1 as f32 - 1.;
-            let vl1 = vls1 as f32 - 1.;
+
+            let mut u0 = 0.;
+            // Length of the side
+            let mut u1 = mag(&(side.p1.clone() - side.p2.clone()));
 
             let mut p1 = side.p1.clone();
             let mut p2 = side.p2.clone();
@@ -123,20 +107,14 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
                 let c1 = (p1.x - pp1.x) / (pp2.x - pp1.x);
                 let c2 = (p2.x - pp1.x) / (pp2.x - pp1.x);
 
-                um0 = c1 * um1;
-                um1 = c2 * um1;
-
-                uu0 = c1 * uu1;
-                uu1 = c2 * uu1;
+                u0 = c1 * u1;
+                u1 = c2 * u1;
             } else {
                 let c1 = (p1.y - pp1.y) / (pp2.y - pp1.y);
                 let c2 = (p2.y - pp1.y) / (pp2.y - pp1.y);
 
-                um0 = c1 * um1;
-                um1 = c2 * um1;
-
-                uu0 = c1 * uu1;
-                uu1 = c2 * uu1;
+                u0 = c1 * u1;
+                u1 = c2 * u1;
             }
 
             let yceil = sect.ceil_height - player.zpos;
@@ -185,6 +163,7 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
                 let z1 = p2.y;
 
                 let alpha = ((x - x1) as f32 / (x2 - x1) as f32);
+                let ualpha = texmapping_calculation(alpha, u0, u1, z0, z1);
 
                 let ya = (x - x1) * (y2a - y1a) / (x2 - x1) + y1a;
                 let yb = (x - x1) * (y2b - y1b) / (x2 - x1) + y1b;
@@ -205,15 +184,13 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
                     let cnyb = clamp(nyb, ctoff.bottom, ctoff.top);
 
                     // Upper
-                    let uualpha = texmapping_calculation(alpha, uu0, uu1, z0, z1);
                     let upper_height = (sect.ceil_height - nyceil).abs();
-                    textured_line(upper_tex, x, cya, cnya - 1, ya, nya, uualpha, vu0, vu1, pixels, upper_height);
+                    textured_line(upper_tex, x, cya, cnya - 1, ya, nya, ualpha, pixels, upper_height);
                     ctoff.top = min(ctoff.top, min(cya, cnya));
 
                     // Lower
-                    let ulalpha = texmapping_calculation(alpha, ul0, ul1, z0, z1);
                     let lower_height = (sect.floor_height - nyfloor).abs();
-                    textured_line(lower_tex, x, cnyb + 1, cyb, nyb + 1, yb, ulalpha, vl0, vl1, pixels, lower_height);
+                    textured_line(lower_tex, x, cnyb + 1, cyb, nyb + 1, yb, ualpha, pixels, lower_height);
                     ctoff.bottom = clamp(min(cyb, cnyb), ctoff.bottom, 0);
                     ctoff.bottom = max(ctoff.bottom, max(cyb, cnyb));
 
@@ -223,9 +200,8 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
 
                 // Render wall
                 if DRAW_WALLS {
-                    let umalpha = texmapping_calculation(alpha, um0, um1, z0, z1);
                     let sec_height = sect.ceil_height - sect.floor_height;
-                    textured_line(mid_tex, x, cya, cyb, ya, yb, umalpha, vm0, vm1, pixels, sec_height);
+                    textured_line(mid_tex, x, cya, cyb, ya, yb, ualpha, pixels, sec_height);
                 }
             }
 
@@ -261,7 +237,7 @@ fn world_to_screen_pos (v: Vector3f, player: &Thing) -> Vector2f {
 }
 
 // Dude this function takes too many params
-pub fn textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, real_sy: i64, real_ey: i64, ualpha: f32, v0: f32, v1: f32, pixels: &mut Vec<u8>, wall_height: f32) {
+pub fn textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, real_sy: i64, real_ey: i64, ualpha: f32, pixels: &mut Vec<u8>, wall_height: f32) {
     let mut u = ualpha;
     let umax = texture.width;
     let ufmax = umax as f32;
@@ -270,7 +246,7 @@ pub fn textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, r
     if u < 0. {
         return;
     }
-    while u > ufmax { u -= ufmax };
+    while u >= ufmax { u -= ufmax };
 
 
     let uw = WIDTH as usize;
