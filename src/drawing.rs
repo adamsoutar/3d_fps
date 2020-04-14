@@ -23,11 +23,11 @@ struct RenderQueueItem {
     c_right: i64
 }
 
-pub fn draw_3d_map (window: &mut RenderWindow, resources: &ResourcePool, map: &Vec<Sector>, player: &Thing, cutoffs: &mut Vec<Cutoffs>, pixels: &mut Vec<u8>) {
+pub fn draw_3d_map (window: &mut RenderWindow, resources: &ResourcePool, map: &Vec<Sector>, player: &Thing, cutoffs: &mut Vec<Cutoffs>, pixels: &mut Box<[u8]>) {
     draw_screen(window, resources, cutoffs, map, player, pixels);
 }
 
-fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &mut Vec<Cutoffs>, map: &Vec<Sector>, player: &Thing, pixels: &mut Vec<u8>) {
+fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &mut Vec<Cutoffs>, map: &Vec<Sector>, player: &Thing, pixels: &mut Box<[u8]>) {
     // Render queue is used for drawing portals
     let w = WIDTH as i64 / 2;
     let h = WIDTH as i64 / 2 - 1;
@@ -236,14 +236,14 @@ fn texmapping_calculation (alpha: f32, u0: f32, u1: f32, z0: f32, z1: f32) -> f3
     numerator / denominator
 }
 
-fn screen_to_world_pos (v: Vector2f, z: f32, player: &Thing) -> Vector2f {
+fn screen_to_world_pos (v: &Vector2f, z: f32, player: &Thing) -> Vector2f {
     let y = (YFOV * z - YFOV * player.zpos) / (v.y - YFOV * player.yaw);
     let x = (v.x * y) / XFOV;
     let v = rotate_vec(Vector2f::new(x, y), player.rot);
     v + player.pos
 }
 
-pub fn depth_textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, pixels: &mut Vec<u8>, hei: f32, player: &Thing) {
+pub fn depth_textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, pixels: &mut Box<[u8]>, hei: f32, player: &Thing) {
     let mut sys = -start_y + HEIGHT as i64 / 2;
     let mut sye = -end_y + HEIGHT as i64 / 2;
     sys = clamp(sys, 0, HEIGHT as i64 - 1);
@@ -255,18 +255,17 @@ pub fn depth_textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: 
     let uw = WIDTH as usize;
 
     let h = HEIGHT as f32 / 2.;
+
+    // Cache a bunch of stuff for performance
+    let mut v = Vector2f::new(x as f32, -(usys as f32 - h));
+    let th = texture.height;
+    let tw = texture.width;
+
     for y in usys..usye {
-        // let (mx, my) = depth_coord_to_map(hei, usx as f32, y as f32, player);
-
-        let cy = -(y as f32 - h);
-        let m = screen_to_world_pos(Vector2f::new(x as f32, cy), hei, player);
-
-        // let s = world_to_screen_pos(Vector3f::new(m.x, m.y, hei), player);
-        // println!("Screen_pos: {}, {} Screen_to_world_pos: {}, {}, World_to_screen_pos: {},{}", usx, y, m.x, m.y, s.x, s.y);
-
-        let (mx, my) = (m.x, m.y);
-        let (mxu, myu) = (mx as usize, my as usize);
-        let (tx, ty) = (mxu % texture.width, myu % texture.height);
+        v.y -= 1.;
+        let m = screen_to_world_pos(&v, hei, player);
+        let mut ty = m.y as usize % th;
+        let mut tx = m.x as usize % tw;
 
         let i1 = y * uw * 4 + usx * 4;
         let i2 = ty * texture.width * 4 + tx * 4;
@@ -279,7 +278,7 @@ pub fn depth_textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: 
 }
 
 // Dude this function takes too many params
-pub fn textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, real_sy: i64, real_ey: i64, ualpha: f32, pixels: &mut Vec<u8>, wall_height: f32) {
+pub fn textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, real_sy: i64, real_ey: i64, ualpha: f32, pixels: &mut Box<[u8]>, wall_height: f32) {
     let mut u = ualpha;
     let umax = texture.width;
     let ufmax = umax as f32;

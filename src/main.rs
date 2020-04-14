@@ -216,7 +216,7 @@ fn main() {
 
 
     // Prepare render texture
-    let mut pixels: Vec<u8> = vec![255; PIXEL_ARRAY_LENGTH];
+    let mut pixels: Box<[u8]> = (vec![255; PIXEL_ARRAY_LENGTH]).into_boxed_slice();
 
     let mut render_texture = Texture::new(WIDTH, HEIGHT).unwrap();
 

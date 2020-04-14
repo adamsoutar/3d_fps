@@ -8,7 +8,7 @@ use std::time::Instant;
 pub struct GameTexture {
     pub width: usize,
     pub height: usize,
-    pub pixels: Vec<u8>
+    pub pixels: Box<[u8]>
 }
 
 pub struct ResourcePool {
@@ -61,7 +61,7 @@ pub fn create_and_load () -> ResourcePool {
         pool.textures.insert(tex_name, GameTexture {
             width: w as usize,
             height: h as usize,
-            pixels
+            pixels: pixels.into_boxed_slice()
         });
     }
 
