@@ -61,6 +61,8 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
         }
 
         let sect = &map[now.sector_id];
+        let ceil_tex = &resources.textures[&sect.ceil_texture];
+        let floor_tex = &resources.textures[&sect.floor_texture];
 
         // For each wall
         for side in &sect.sides {
@@ -171,9 +173,15 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
                 let cyb = clamp(yb, ctoff.bottom, ctoff.top);
 
                 // Render ceiling
-                if DRAW_CEILINGS { vline(x, ctoff.top, cya - 1, ceil_colour, pixels) }
+                if DRAW_CEILINGS {
+                    depth_textured_line(ceil_tex, x, ctoff.top, cya - 1, pixels, sect.ceil_height, player);
+                    // vline(x, ctoff.top, cya - 1, ceil_colour, pixels)
+                }
                 // Render floor
-                if DRAW_FLOORS { vline(x, cyb + 1, ctoff.bottom, floor_colour, pixels) }
+                if DRAW_FLOORS {
+                    depth_textured_line(floor_tex, x, cyb + 1, ctoff.bottom, pixels, sect.floor_height, player);
+                    // vline(x, cyb + 1, ctoff.bottom, floor_colour, pixels)
+                }
 
 
                 if side.neighbour != -1 {
@@ -228,16 +236,46 @@ fn texmapping_calculation (alpha: f32, u0: f32, u1: f32, z0: f32, z1: f32) -> f3
     numerator / denominator
 }
 
-// Perhaps useful for medpacks, players, other sprites etc.
-fn world_to_screen_pos (v: Vector3f, player: &Thing) -> Vector2f {
-    let p = rotate_vec(Vector2f::new(v.x, v.y) - player.pos, -player.rot);
-    let x = p.x * XFOV / p.y;
-    let y = (v.z - player.zpos) * YFOV / p.y;
-    Vector2::new(x, y)
+fn screen_to_world_pos (v: Vector2f, z: f32, player: &Thing) -> Vector2f {
+    let y = (YFOV * z - YFOV * player.zpos) / (v.y - YFOV * player.yaw);
+    let x = (v.x * y) / XFOV;
+    let v = rotate_vec(Vector2f::new(x, y), player.rot);
+    v + player.pos
 }
 
-pub fn depth_textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, pixels: &mut Vec<u8>, hei: f32) {
+pub fn depth_textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, pixels: &mut Vec<u8>, hei: f32, player: &Thing) {
+    let mut sys = -start_y + HEIGHT as i64 / 2;
+    let mut sye = -end_y + HEIGHT as i64 / 2;
+    sys = clamp(sys, 0, HEIGHT as i64 - 1);
+    sye = clamp(sye, 0, HEIGHT as i64 - 1);
 
+    let usx = (x + WIDTH as i64 / 2) as usize;
+    let usys = sys as usize;
+    let usye = sye as usize;
+    let uw = WIDTH as usize;
+
+    let h = HEIGHT as f32 / 2.;
+    for y in usys..usye {
+        // let (mx, my) = depth_coord_to_map(hei, usx as f32, y as f32, player);
+
+        let cy = -(y as f32 - h);
+        let m = screen_to_world_pos(Vector2f::new(x as f32, cy), hei, player);
+
+        // let s = world_to_screen_pos(Vector3f::new(m.x, m.y, hei), player);
+        // println!("Screen_pos: {}, {} Screen_to_world_pos: {}, {}, World_to_screen_pos: {},{}", usx, y, m.x, m.y, s.x, s.y);
+
+        let (mx, my) = (m.x, m.y);
+        let (mxu, myu) = (mx as usize, my as usize);
+        let (tx, ty) = (mxu % texture.width, myu % texture.height);
+
+        let i1 = y * uw * 4 + usx * 4;
+        let i2 = ty * texture.width * 4 + tx * 4;
+
+        pixels[i1] = texture.pixels[i2];
+        pixels[i1 + 1] = texture.pixels[i2 + 1];
+        pixels[i1 + 2] = texture.pixels[i2 + 2];
+        pixels[i1 + 3] = texture.pixels[i2 + 3];
+    }
 }
 
 // Dude this function takes too many params

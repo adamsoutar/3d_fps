@@ -3,7 +3,9 @@ use sfml::system::*;
 pub struct Sector {
     pub sides: Vec<Side>,
     pub ceil_height: f32,
-    pub floor_height: f32
+    pub floor_height: f32,
+    pub ceil_texture: String,
+    pub floor_texture: String
 }
 
 pub struct Side {

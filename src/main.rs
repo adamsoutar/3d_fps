@@ -32,6 +32,8 @@ fn main() {
     let btex = String::from("bricks");
     let ctex = String::from("concrete");
     let stex = String::from("concrete-square");
+    let ttex = String::from("tiles");
+    let mtex = String::from("marble");
     let map: Vec<Sector> = vec![
         // Spawn room
         Sector {
@@ -87,7 +89,9 @@ fn main() {
                 }
             ],
             ceil_height: 128.,
-            floor_height: 0.
+            floor_height: 0.,
+            ceil_texture: ttex.clone(),
+            floor_texture: mtex.clone()
         },
         // The corridor
         Sector {
@@ -126,7 +130,9 @@ fn main() {
                 }
             ],
             floor_height: 16.,
-            ceil_height: 100.
+            ceil_height: 100.,
+            ceil_texture: ttex.clone(),
+            floor_texture: mtex.clone()
         },
         // The other room
         Sector {
@@ -181,7 +187,9 @@ fn main() {
                 }
             ],
             floor_height: 0.,
-            ceil_height: 256.
+            ceil_height: 256.,
+            ceil_texture: ttex.clone(),
+            floor_texture: mtex.clone()
         }
     ];
 
@@ -220,7 +228,7 @@ fn main() {
 
     loop {
         let delta_time = clock.restart().as_seconds();
-        // println!("{} FPS", 1. / delta_time);
+        println!("{} FPS", 1. / delta_time);
 
         while let Some(event) = window.poll_event() {
             match event {
