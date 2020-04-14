@@ -41,8 +41,8 @@ pub fn create_and_load () -> ResourcePool {
         // Decompress and save into memory the colours
         // Speeds up render
         let mut pixels = vec![];
-        for x in 0..w {
-            for y in 0..h {
+        for y in 0..h {
+            for x in 0..w {
                 let col = tex.get_pixel(x, y).0;
                 pixels.push(col[0]);
                 pixels.push(col[1]);

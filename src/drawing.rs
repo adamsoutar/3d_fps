@@ -207,11 +207,11 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
                     // Upper
                     let uualpha = texmapping_calculation(alpha, uu0, uu1, z0, z1);
                     textured_line(upper_tex, x, cya, cnya - 1, ya, nya, uualpha, vu0, vu1, pixels);
-                    // vline(x, cya, cnya - 1, upper_lower_colour, pixels);
                     ctoff.top = min(ctoff.top, min(cya, cnya));
 
                     // Lower
-                    // vline(x, cnyb + 1, cyb, upper_lower_colour, pixels);
+                    let ulalpha = texmapping_calculation(alpha, ul0, ul1, z0, z1);
+                    textured_line(lower_tex, x, cnyb + 1, cyb, nyb + 1, yb, ulalpha, vl0, vl1, pixels);
                     ctoff.bottom = clamp(min(cyb, cnyb), ctoff.bottom, 0);
                     ctoff.bottom = max(ctoff.bottom, max(cyb, cnyb));
 
@@ -221,7 +221,6 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
 
                 // Render wall
                 if DRAW_WALLS {
-                    // vline(x, cya, cyb, col, pixels)
                     let umalpha = texmapping_calculation(alpha, um0, um1, z0, z1);
                     textured_line(mid_tex, x, cya, cyb, ya, yb, umalpha, vm0, vm1, pixels);
                 }
@@ -275,15 +274,18 @@ pub fn textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, r
 
     let scrnx = (x + WIDTH as i64 / 2) as usize;
 
-    let mut scrnys = (-start_y + HEIGHT as i64 / 2) as usize;
-    let mut scrnye = (-end_y + HEIGHT as i64 / 2) as usize;
-    scrnys = clamp(scrnys, 0, uh - 1);
-    scrnye = clamp(scrnye, 0, uh - 1);
+    let mut sys = -start_y + HEIGHT as i64 / 2;
+    let mut sye = -end_y + HEIGHT as i64 / 2;
+    sys = clamp(sys, 0, HEIGHT as i64 - 1);
+    sye = clamp(sye, 0, HEIGHT as i64 - 1);
+
+    let scrnys = sys as usize;
+    let scrnye = sye as usize;
 
     let rys = (-real_sy + HEIGHT as i64 / 2) as i64;
     let rye = (-real_ey + HEIGHT as i64 / 2) as i64;
 
-    if scrnx < 0 || scrnx >= uw || rye < 0 || rys >= HEIGHT as i64 {
+    if scrnx >= uw || rye < 0 || rys >= HEIGHT as i64 {
         // It's offscreen
         return;
     }
@@ -295,7 +297,13 @@ pub fn textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, r
         let uv = v as usize;
 
         let i1 = y * uw * 4 + scrnx * 4;
-        let i2 = uu * umax * 4 + uv * 4;
+        let i2 = uv * umax * 4 + uu * 4;
+
+        if a > 1. {
+            // This happens with portals above the player's view
+            // it's not an issue.
+            continue;
+        }
 
         pixels[i1] = texture.pixels[i2];
         pixels[i1 + 1] = texture.pixels[i2 + 1];
@@ -306,29 +314,29 @@ pub fn textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, r
 
 pub fn vline (x: i64, start_y: i64, end_y: i64, colour: Color, pixels: &mut Vec<u8>) {
     // Unsupported to discourage me from fixing bugs in this function
-    return;
+    // return;
 
     // Lines must be drawn top to bottom
-    // if end_y > start_y { return }
-    //
-    // let uw = WIDTH as usize;
-    // let uh = HEIGHT as usize;
-    //
-    // let mut scrnx = (x + WIDTH as i64 / 2) as usize;
-    // let mut scrnys = (-start_y + HEIGHT as i64 / 2) as usize;
-    // let mut scrnye = (-end_y + HEIGHT as i64 / 2) as usize;
-    //
-    // // TODO: Find out why we're getting draws above/below the screen
-    // scrnye = clamp(scrnye, 0, uh);
-    // scrnys = clamp(scrnys, 0, uh);
-    // scrnx = clamp(scrnx, 0, uw);
-    //
-    // for y in scrnys..scrnye {
-    //     pixels[y * uw * 4 + scrnx * 4] = colour.r;
-    //     pixels[y * uw * 4 + scrnx * 4 + 1] = colour.g;
-    //     pixels[y * uw * 4 + scrnx * 4 + 2] = colour.b;
-    //     pixels[y * uw * 4 + scrnx * 4 + 3] = colour.a;
-    // }
+    if end_y > start_y { return }
+
+    let uw = WIDTH as usize;
+    let uh = HEIGHT as usize;
+
+    let mut scrnx = (x + WIDTH as i64 / 2) as usize;
+    let mut scrnys = (-start_y + HEIGHT as i64 / 2) as usize;
+    let mut scrnye = (-end_y + HEIGHT as i64 / 2) as usize;
+
+    // TODO: Find out why we're getting draws above/below the screen
+    scrnye = clamp(scrnye, 0, uh);
+    scrnys = clamp(scrnys, 0, uh);
+    scrnx = clamp(scrnx, 0, uw);
+
+    for y in scrnys..scrnye {
+        pixels[y * uw * 4 + scrnx * 4] = colour.r;
+        pixels[y * uw * 4 + scrnx * 4 + 1] = colour.g;
+        pixels[y * uw * 4 + scrnx * 4 + 2] = colour.b;
+        pixels[y * uw * 4 + scrnx * 4 + 3] = colour.a;
+    }
 }
 
 fn clamp<T:PartialOrd> (v: T, x: T, y: T) -> T {
