@@ -26,6 +26,20 @@ pub struct Thing {
     pub fall_velocity: f32,
     pub velocity: Vector2f,
     pub rot: f32,      // Rotation
+    pub rsin: f32, // Cached trig values for the rotation
+    pub rcos: f32, // For speed
     pub sector: usize,  // Sector in which the object resides
     pub yaw: f32 // Vertical look
+}
+
+impl Thing {
+    pub fn set_rotation(&mut self, rot: f32) {
+        self.rot = rot;
+        self.rsin = rot.sin();
+        self.rcos = rot.cos();
+    }
+
+    pub fn rotate(&mut self, delta: f32) {
+        self.set_rotation(self.rot + delta)
+    }
 }

@@ -200,6 +200,8 @@ fn main() {
         fall_velocity: 0.,
         velocity: Vector2f::new(0.,0.),
         rot: 0.,
+        rsin: 0.,
+        rcos: 1.,
         sector: 0,
         yaw: 0.
     };
@@ -327,7 +329,7 @@ fn process_movement (player: &mut Thing, map: &Vec<Sector>) {
     if Key::is_pressed(Key::Right) {
         rt += rot;
     }
-    player.rot += rt;
+    player.rotate(rt);
 }
 
 fn collision_detection (sect: &Sector, map: &Vec<Sector>, player: &mut Thing) {
@@ -379,7 +381,7 @@ fn mouselook (v: Vector2i, player: &mut Thing) {
     if !ENABLE_HORIZONTAL_MOUSELOOK { mx = 0. }
     if !ENABLE_VERTICAL_MOUSELOOK { my = 0. }
 
-    player.rot += mx;
+    player.rotate(mx);
     player.yaw += my;
     if player.yaw > MAX_YAW { player.yaw = MAX_YAW }
     if player.yaw < -MAX_YAW { player.yaw = -MAX_YAW }

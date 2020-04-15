@@ -82,10 +82,10 @@ fn draw_screen (window: &mut RenderWindow, resources: &ResourcePool, cutoffs: &m
             let mut pp2 = side.p2.clone();
 
             // Rotate the map around the player
-            p1 = rotate_vec(p1 - player.pos, -player.rot);
-            p2 = rotate_vec(p2 - player.pos, -player.rot);
-            pp1 = rotate_vec(pp1 - player.pos, -player.rot);
-            pp2 = rotate_vec(pp2 - player.pos, -player.rot);
+            p1 = rotate_around_player(p1 - player.pos, player, false);
+            p2 = rotate_around_player(p2 - player.pos, player, false);
+            pp1 = rotate_around_player(pp1 - player.pos, player, false);
+            pp2 = rotate_around_player(pp2 - player.pos, player, false);
 
             // The wall is behind us
             if p1.y <= 0. && p2.y <= 0. { continue }
@@ -239,7 +239,7 @@ fn texmapping_calculation (alpha: f32, u0: f32, u1: f32, z0: f32, z1: f32) -> f3
 fn screen_to_world_pos (v: &Vector2f, z: f32, player: &Thing) -> Vector2f {
     let y = (YFOV * z - YFOV * player.zpos) / (v.y - YFOV * player.yaw);
     let x = (v.x * y) / XFOV;
-    let v = rotate_vec(Vector2f::new(x, y), player.rot);
+    let v = rotate_around_player(Vector2f::new(x, y), player, true);
     v + player.pos
 }
 

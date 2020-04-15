@@ -1,5 +1,6 @@
 use sfml::system::*;
 use crate::constants::*;
+use crate::map::Thing;
 
 pub fn line_intersect (v1: Vector2f, v2: Vector2f, v3: Vector2f, v4: Vector2f) -> Vector2f {
     // From https://youtu.be/HQYsFshbkYw?t=188
@@ -41,6 +42,16 @@ pub fn rotate_vec (v: Vector2f, theta: f32) -> Vector2f {
     let ct = t.cos();
 
     Vector2::new(
+        v.x * ct - v.y * st,
+        v.x * st + v.y * ct
+    )
+}
+
+pub fn rotate_around_player (v: Vector2f, player: &Thing, backwards: bool) -> Vector2f {
+    let st = if backwards { -player.rsin } else { player.rsin };
+    let ct = player.rcos;
+
+    Vector2f::new(
         v.x * ct - v.y * st,
         v.x * st + v.y * ct
     )
