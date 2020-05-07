@@ -8,7 +8,7 @@ A Rust project to create a 3D DOOM style engine.
 
 ![Screenshot 3](screenshots/s3.png)
 
-## Features
+## Features
 
 3d_fps boasts:
 
@@ -18,7 +18,7 @@ A Rust project to create a 3D DOOM style engine.
  - Recreated DOOM 'drifter' movement
  - The lowest FPS you've ever seen
 
-## About
+## About
 
 The engine is based on the ideas put forward in
 [Bisqwit's video](https://youtu.be/HQYsFshbkYw)
