@@ -244,10 +244,11 @@ fn screen_to_world_pos (v: &Vector2f, z: f32, player: &Thing) -> Vector2f {
 }
 
 pub fn depth_textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: i64, pixels: &mut Box<[u8]>, hei: f32, player: &Thing) {
-    let mut sys = -start_y + HEIGHT as i64 / 2;
-    let mut sye = -end_y + HEIGHT as i64 / 2;
-    sys = clamp(sys, 0, HEIGHT as i64 - 1);
-    sye = clamp(sye, 0, HEIGHT as i64 - 1);
+    let ih = HEIGHT as i64;
+    let mut sys = -start_y + ih / 2;
+    let mut sye = -end_y + ih / 2;
+    sys = clamp(sys, 0, ih - 1);
+    sye = clamp(sye, 0, ih - 1);
 
     let usx = (x + WIDTH as i64 / 2) as usize;
     let usys = sys as usize;
@@ -264,6 +265,7 @@ pub fn depth_textured_line (texture: &GameTexture, x: i64, start_y: i64, end_y: 
     for y in usys..usye {
         v.y -= 1.;
         let m = screen_to_world_pos(&v, hei, player);
+        
         let mut ty = m.y as usize % th;
         let mut tx = m.x as usize % tw;
 
