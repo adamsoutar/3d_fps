@@ -1,5 +1,5 @@
 [package]
-name = "3d_fps"
+name = "fps_3d"
 version = "0.1.0"
 authors = ["Adam <adam@overflo.me>"]
 edition = "2018"
@@ -9,3 +9,6 @@ edition = "2018"
 [dependencies]
 sfml = "0.14.0"
 image = "0.23.2"
+
+[profile.release]
+debug = true

@@ -25,13 +25,13 @@ pub const MAX_SECTOR_DRAWS: usize = 100;
 pub const X_MOUSE_SENSITIVITY: f32 = 0.0005;
 pub const Y_MOUSE_SENSITIVITY: f32 = 0.0007;
 
-pub const ENABLE_HORIZONTAL_MOUSELOOK: bool = true;
-pub const ENABLE_VERTICAL_MOUSELOOK: bool = true;
+pub const ENABLE_HORIZONTAL_MOUSELOOK: bool = false;
+pub const ENABLE_VERTICAL_MOUSELOOK: bool = false;
 
 // Clamps looking up and down
 pub const MAX_YAW: f32 = 1.7;
 
 // Debug only, no reason to mess with these in game:
-pub const DRAW_CEILINGS: bool = true;
+pub const DRAW_CEILINGS: bool = false;
 pub const DRAW_WALLS: bool = true;
-pub const DRAW_FLOORS: bool = true;
+pub const DRAW_FLOORS: bool = false;
